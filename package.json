@@ -1,8 +1,10 @@
 {
-  "name": "translatesheet",
-  "version": "0.0.3",
+  "name": "translate-sheet",
+  "version": "0.0.4",
   "description": "translations made easy",
   "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
@@ -12,16 +14,23 @@
     "translate",
     "react",
     "native",
+    "translate-sheet",
     "translatesheet",
     "sheet"
   ],
   "author": "Brandon Austin",
   "license": "ISC",
-  "dependencies": {
+  "peerDependencies": {
     "i18next": "^24.0.5"
   },
   "repository": {
     "type": "git",
+    "directory": "https://www.translatesheet.co/",
     "url": "https://github.com/branaust/translatesheet.git"
+  },
+  "dependencies": {
+    "@types/node": "^22.10.1",
+    "commander": "^12.1.0",
+    "glob": "^11.0.0"
   }
 }
