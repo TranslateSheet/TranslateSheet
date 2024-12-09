@@ -1,6 +1,6 @@
 {
   "name": "translatesheet",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "translations made easy",
   "main": "dist/index.js",
   "scripts": {
