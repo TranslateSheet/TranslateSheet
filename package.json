@@ -1,0 +1,23 @@
+{
+  "name": "translatesheet",
+  "version": "0.0.3",
+  "description": "translations made easy",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prepublishOnly": "npm version patch -m \"chore(release): %s\" && npm run build"
+  },
+  "keywords": [
+    "translate",
+    "react",
+    "native",
+    "translatesheet",
+    "sheet"
+  ],
+  "author": "Brandon Austin",
+  "license": "ISC",
+  "dependencies": {
+    "i18next": "^24.0.5"
+  }
+}
