@@ -1,12 +1,12 @@
 {
   "name": "translatesheet",
-  "version": "0.0.3",
+  "version": "0.0.2",
   "description": "translations made easy",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "prepublishOnly": "npm version patch -m \"chore(release): %s\" && npm run build"
+    "prepublish": "npm version patch -m \"chore(release): %s\" && npm run build"
   },
   "keywords": [
     "translate",
@@ -19,5 +19,9 @@
   "license": "ISC",
   "dependencies": {
     "i18next": "^24.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/branaust/translatesheet.git"
   }
 }
