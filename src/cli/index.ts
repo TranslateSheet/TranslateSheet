@@ -1,72 +1,155 @@
+#!/usr/bin/env node
 import fs from "fs";
 import path from "path";
-const glob = require("glob");
+import * as glob from "glob";
+import OpenAI from "openai";
 import { program } from "commander";
 
-// Define the structure of the translations object
-type Translations = {
-  [namespace: string]: Record<string, string>;
+const defaultLanguage = "en";
+
+/**
+ * Generate the primary language file.
+ */
+const generatePrimaryLanguageFile = (
+  outputDir: string,
+  translations: Record<string, any>,
+) => {
+  const filePath = path.join(outputDir, `${defaultLanguage}.ts`);
+  const content = `const ${defaultLanguage} = ${JSON.stringify(
+    translations,
+    null,
+    2,
+  )};\nexport default ${defaultLanguage};`;
+  fs.writeFileSync(filePath, content, "utf-8");
+  console.log(`Generated primary language file: ${filePath}`);
 };
 
-// Aggregated translations
-const translations: Translations = {}; // Properly typed
+/**
+ * Translate content using OpenAI's ChatGPT.
+ */
+const translateContent = async (
+  content: Record<string, any>,
+  targetLanguage: string,
+  openai: OpenAI,
+): Promise<Record<string, any>> => {
+  const prompt = `
+Translate the following JSON object into ${targetLanguage}. Ensure the translation retains all keys and respects the context of the text.
 
-// Extract translations from components
-function extractTranslations() {
-  const glob = require("glob"); // Dynamically require the package
+${JSON.stringify(content, null, 2)}
+`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+  });
+
+  const translatedText = response.choices?.[0]?.message?.content || "{}";
+  return JSON.parse(translatedText);
+};
+
+/**
+ * Generate translated files for target languages.
+ */
+const generateTranslatedFiles = async (
+  outputDir: string,
+  primaryContent: Record<string, any>,
+  languages: string[],
+  apiKey: string,
+) => {
+  const openai = new OpenAI({ apiKey });
+
+  for (const lang of languages) {
+    console.log(`Translating content to ${lang}...`);
+    try {
+      const translatedContent = await translateContent(
+        primaryContent,
+        lang,
+        openai,
+      );
+
+      const filePath = path.join(outputDir, `${lang}.ts`);
+      const content = `const ${lang} = ${JSON.stringify(
+        translatedContent,
+        null,
+        2,
+      )};\nexport default ${lang};`;
+      fs.writeFileSync(filePath, content, "utf-8");
+      console.log(`Generated translation file: ${filePath}`);
+    } catch (error) {
+      console.error(`Failed to generate translation for ${lang}:`, error);
+    }
+  }
+};
+
+/**
+ * Extract translations from the codebase.
+ */
+const extractTranslations = (): Record<string, any> => {
   const files = glob.sync("**/*.tsx");
+  const translations: Record<string, any> = {};
 
-  files.forEach((file: string) => {
+  files.forEach((file) => {
     const content = fs.readFileSync(file, "utf-8");
-
-    // Match TranslateSheet.create calls
     const regex = /TranslateSheet\.create\("([^"]+)",\s*({[\s\S]*?})\)/g;
     let match;
 
     while ((match = regex.exec(content)) !== null) {
-      const namespace = match[1]; // Namespace (e.g., "sign-in")
-      const translationObject: Record<string, string> = eval(`(${match[2]})`); // Evaluate the translation object
+      const namespace = match[1];
+      const translationObject = eval(`(${match[2]})`);
 
       if (!translations[namespace]) {
         translations[namespace] = {};
       }
-
-      // Merge translations
       Object.assign(translations[namespace], translationObject);
     }
   });
-}
 
+  return translations;
+};
 
-// Generate centralized translation files
-function generateTranslationFiles(outputDir: string, defaultLanguage: string) {
-  // Ensure output directory exists
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  // Write the default language file
-  const defaultLanguageFile = path.join(outputDir, `${defaultLanguage}.ts`);
-  const content = `const ${defaultLanguage} = ${JSON.stringify(
-    translations,
-    null,
-    2
-  )};\nexport default ${defaultLanguage};`;
-  fs.writeFileSync(defaultLanguageFile, content, "utf-8");
-
-  console.log(`Generated ${defaultLanguageFile}`);
-}
-
-// CLI setup
+/**
+ * Command-line interface setup with Commander.
+ */
 program
-  .option("-o, --output <path>", "Output directory for translation files", "i18n")
-  .option("-l, --language <code>", "Default language code", "en")
-  .action((options) => {
-    const outputDir = path.resolve(process.cwd(), options.output);
-    const defaultLanguage = options.language;
+  .command("generate")
+  .option("--output <output>", "Output directory", "./i18n")
+  .option("--language <language>", "Primary language", "en")
+  .option(
+    "--languages <languages>",
+    "Comma-separated list of target languages",
+    "",
+  )
+  .option("--apiKey <apiKey>", "OpenAI API key")
+  .action(async (cmd) => {
+    const { output, language, languages, apiKey } = cmd;
+    const targetLanguages = languages
+      .split(",")
+      .map((lang: string) => lang.trim());
 
-    extractTranslations();
-    generateTranslationFiles(outputDir, defaultLanguage);
+    if (!apiKey) {
+      console.error("OpenAI API key is required. Use the --apiKey option.");
+      process.exit(1);
+    }
+
+    // Extract translations
+    console.log("Extracting translations...");
+    const primaryTranslations = extractTranslations();
+
+    // Generate primary language file
+    console.log(`Generating primary language file (${language})...`);
+    generatePrimaryLanguageFile(output, primaryTranslations);
+
+    // Generate translations for target languages
+    if (targetLanguages.length > 0) {
+      console.log("Generating translations for target languages...");
+      await generateTranslatedFiles(
+        output,
+        primaryTranslations,
+        targetLanguages,
+        apiKey,
+      );
+    }
   });
 
 program.parse(process.argv);
