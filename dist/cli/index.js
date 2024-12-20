@@ -30,7 +30,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const glob = __importStar(require("glob"));
-const openai_1 = __importDefault(require("openai"));
 const commander_1 = require("commander");
 const defaultLanguage = "en";
 /**
@@ -43,32 +42,40 @@ const generatePrimaryLanguageFile = (outputDir, translations) => {
     console.log(`Generated primary language file: ${filePath}`);
 };
 /**
- * Translate content using OpenAI's ChatGPT.
+ * Translate content using the TranslateSheet backend API.
  */
-const translateContent = async (content, targetLanguage, openai) => {
-    var _a, _b, _c;
-    const prompt = `
-Translate the following JSON object into ${targetLanguage}. Ensure the translation retains all keys and respects the context of the text.
-
-${JSON.stringify(content, null, 2)}
-`;
-    const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-    });
-    const translatedText = ((_c = (_b = (_a = response.choices) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.message) === null || _c === void 0 ? void 0 : _c.content) || "{}";
-    return JSON.parse(translatedText);
+const translateContent = async (content, targetLanguage, apiKey) => {
+    try {
+        const response = await fetch("https://api.translatesheet.co/api/translations", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                content,
+                targetLanguage,
+                apiKey,
+            }),
+        });
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.translatedContent;
+    }
+    catch (error) {
+        console.error("Error translating content via API:", error);
+        throw error;
+    }
 };
 /**
  * Generate translated files for target languages.
  */
 const generateTranslatedFiles = async (outputDir, primaryContent, languages, apiKey) => {
-    const openai = new openai_1.default({ apiKey });
     for (const lang of languages) {
         console.log(`Translating content to ${lang}...`);
         try {
-            const translatedContent = await translateContent(primaryContent, lang, openai);
+            const translatedContent = await translateContent(primaryContent, lang, apiKey);
             const filePath = path_1.default.join(outputDir, `${lang}.ts`);
             const content = `const ${lang} = ${JSON.stringify(translatedContent, null, 2)};\nexport default ${lang};`;
             fs_1.default.writeFileSync(filePath, content, "utf-8");

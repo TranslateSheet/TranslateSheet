@@ -25,28 +25,38 @@ const generatePrimaryLanguageFile = (
 };
 
 /**
- * Translate content using OpenAI's ChatGPT.
+ * Translate content using the TranslateSheet backend API.
  */
 const translateContent = async (
   content: Record<string, any>,
   targetLanguage: string,
-  openai: OpenAI,
+  apiKey: string
 ): Promise<Record<string, any>> => {
-  const prompt = `
-Translate the following JSON object into ${targetLanguage}. Ensure the translation retains all keys and respects the context of the text.
+  try {
+    const response = await fetch("https://api.translatesheet.co/api/translations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content,
+        targetLanguage,
+        apiKey,
+      }),
+    });
 
-${JSON.stringify(content, null, 2)}
-`;
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0.7,
-  });
-
-  const translatedText = response.choices?.[0]?.message?.content || "{}";
-  return JSON.parse(translatedText);
+    const data = await response.json();
+    return data.translatedContent;
+  } catch (error) {
+    console.error("Error translating content via API:", error);
+    throw error;
+  }
 };
+
 
 /**
  * Generate translated files for target languages.
@@ -57,15 +67,13 @@ const generateTranslatedFiles = async (
   languages: string[],
   apiKey: string,
 ) => {
-  const openai = new OpenAI({ apiKey });
-
   for (const lang of languages) {
     console.log(`Translating content to ${lang}...`);
     try {
       const translatedContent = await translateContent(
         primaryContent,
         lang,
-        openai,
+        apiKey
       );
 
       const filePath = path.join(outputDir, `${lang}.ts`);
