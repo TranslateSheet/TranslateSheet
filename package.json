@@ -1,6 +1,6 @@
 {
   "name": "translate-sheet",
-  "version": "0.0.14",
+  "version": "0.0.21",
   "description": "translations made easy",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -31,8 +31,7 @@
   "dependencies": {
     "@types/node": "^22.10.1",
     "commander": "^12.1.0",
-    "glob": "^11.0.0",
-    "openai": "^4.76.0"
+    "glob": "^11.0.0"
   },
   "bin": {
     "translate-sheet": "./dist/cli/index.js"

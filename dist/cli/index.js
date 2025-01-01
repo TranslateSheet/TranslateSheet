@@ -18,7 +18,7 @@ commander_1.program
     .option("--language <language>", "Primary language", undefined)
     .option("--languages <languages>", "Comma-separated list of target languages", undefined)
     .option("--apiKey <apiKey>", "OpenAI API key", undefined)
-    .option("--config <config>", "Path to configuration file", "./translateSheetConfig.ts")
+    .option("--config <config>", "Path to configuration file", "./translateSheetConfig.js")
     .action(async (cmd) => {
     const { output, language, languages, apiKey, config: configPath } = cmd;
     // Load configuration from file
@@ -32,7 +32,7 @@ commander_1.program
             [],
         apiKey: apiKey || config.apiKey,
     };
-    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, apiKey: finalApiKey, } = mergedConfig;
+    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, apiKey: finalApiKey } = mergedConfig;
     if (!finalApiKey) {
         console.error("API key is required. Provide it via config or CLI options.");
         process.exit(1);

@@ -8,7 +8,6 @@ const translateContent = async (
 ): Promise<Record<string, any>> => {
   try {
     console.log("Sending translation request...");
-    console.log("Content to translate:", content);
     console.log("Target language:", targetLanguage);
 
     const response = await fetch(
@@ -31,9 +30,28 @@ const translateContent = async (
     console.log("API Response Headers:", Object.fromEntries(response.headers));
 
     if (!response.ok) {
-      const errorText = await response.text(); // Read the response body
-      console.error("API Error Response Body:", errorText);
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      const errorResponse = await response.json();
+      console.log(response.status)
+      if (response.status === 403) {
+        throw new Error(
+          "API key is invalid or disabled. Please check your API key."
+        );
+      }
+      if (response.status === 401) {
+        throw new Error(
+          "Unauthorized. Ensure your API key has the correct permissions."
+        );
+      }
+      if (response.status === 400) {
+        throw new Error(
+          `Bad request: ${errorResponse?.error || "Invalid request payload."}`
+        );
+      }
+      throw new Error(
+        `API Error: ${response.status} ${response.statusText} - ${
+          errorResponse?.error || "Unexpected error."
+        }`
+      );
     }
 
     const data = await response.json();

@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const translateContent = async (content, targetLanguage, apiKey) => {
     try {
         console.log("Sending translation request...");
-        console.log("Content to translate:", content);
         console.log("Target language:", targetLanguage);
         const response = await fetch("https://api.translatesheet.co/api/translations", {
             method: "POST",
@@ -23,9 +22,18 @@ const translateContent = async (content, targetLanguage, apiKey) => {
         console.log("API Response Status:", response.status);
         console.log("API Response Headers:", Object.fromEntries(response.headers));
         if (!response.ok) {
-            const errorText = await response.text(); // Read the response body
-            console.error("API Error Response Body:", errorText);
-            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            const errorResponse = await response.json();
+            console.log(response.status);
+            if (response.status === 403) {
+                throw new Error("API key is invalid or disabled. Please check your API key.");
+            }
+            if (response.status === 401) {
+                throw new Error("Unauthorized. Ensure your API key has the correct permissions.");
+            }
+            if (response.status === 400) {
+                throw new Error(`Bad request: ${(errorResponse === null || errorResponse === void 0 ? void 0 : errorResponse.error) || "Invalid request payload."}`);
+            }
+            throw new Error(`API Error: ${response.status} ${response.statusText} - ${(errorResponse === null || errorResponse === void 0 ? void 0 : errorResponse.error) || "Unexpected error."}`);
         }
         const data = await response.json();
         console.log("Translation API Response:", data);

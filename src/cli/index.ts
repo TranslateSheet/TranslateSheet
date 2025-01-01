@@ -5,6 +5,7 @@ import extractTranslations from "./extractTranslations";
 import generatePrimaryLanguageFile from "./generatePrimaryLanguageFile";
 import generateTranslatedFiles from "./generateTranslatedFiles";
 
+
 /**
  * Command-line interface setup with Commander.
  */
@@ -15,14 +16,10 @@ program
   .option(
     "--languages <languages>",
     "Comma-separated list of target languages",
-    undefined
+    undefined,
   )
   .option("--apiKey <apiKey>", "OpenAI API key", undefined)
-  .option(
-    "--config <config>",
-    "Path to configuration file",
-    "./translateSheetConfig.ts"
-  )
+  .option("--config <config>", "Path to configuration file", "./translateSheetConfig.js")
   .action(async (cmd) => {
     const { output, language, languages, apiKey, config: configPath } = cmd;
 
@@ -40,17 +37,11 @@ program
       apiKey: apiKey || config.apiKey,
     };
 
-    const {
-      output: finalOutput,
-      language: finalLanguage,
-      languages: finalLanguages,
-      apiKey: finalApiKey,
-    } = mergedConfig;
+    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, apiKey: finalApiKey } =
+      mergedConfig;
 
     if (!finalApiKey) {
-      console.error(
-        "API key is required. Provide it via config or CLI options."
-      );
+      console.error("API key is required. Provide it via config or CLI options.");
       process.exit(1);
     }
 
@@ -69,10 +60,10 @@ program
         finalOutput,
         primaryTranslations,
         finalLanguages,
-        finalApiKey
+        finalApiKey,
       );
     }
   });
 
-program.parse(process.argv);
 
+program.parse(process.argv);
