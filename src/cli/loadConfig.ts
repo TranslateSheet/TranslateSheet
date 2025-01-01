@@ -4,7 +4,7 @@ import path from "path";
 /**
  * Load TranslateSheet configuration from a file.
  */
-const loadConfig = (configPath = "./translateSheetConfig.ts") => {
+const loadConfig = (configPath = "./translateSheetConfig.js") => {
   if (existsSync(configPath)) {
     try {
       const config = require(path.resolve(configPath));

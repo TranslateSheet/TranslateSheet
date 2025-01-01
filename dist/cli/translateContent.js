@@ -12,11 +12,11 @@ const translateContent = async (content, targetLanguage, apiKey) => {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey}`, // Ensure API key is sent in the correct format if required.
             },
             body: JSON.stringify({
                 content,
                 targetLanguage,
+                apiKey,
             }),
         });
         // Log the response status and headers

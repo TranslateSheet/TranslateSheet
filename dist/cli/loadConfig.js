@@ -8,7 +8,7 @@ const path_1 = __importDefault(require("path"));
 /**
  * Load TranslateSheet configuration from a file.
  */
-const loadConfig = (configPath = "./translateSheetConfig.ts") => {
+const loadConfig = (configPath = "./translateSheetConfig.js") => {
     if ((0, fs_1.existsSync)(configPath)) {
         try {
             const config = require(path_1.default.resolve(configPath));
