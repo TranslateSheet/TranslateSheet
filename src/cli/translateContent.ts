@@ -8,7 +8,6 @@ const translateContent = async (
 ): Promise<Record<string, any>> => {
   try {
     console.log("Sending translation request...");
-    console.log("Target language:", targetLanguage);
 
     const response = await fetch(
       "https://api.translatesheet.co/api/translations",
@@ -24,10 +23,6 @@ const translateContent = async (
         }),
       }
     );
-
-    // Log the response status and headers
-    console.log("API Response Status:", response.status);
-    console.log("API Response Headers:", Object.fromEntries(response.headers));
 
     if (!response.ok) {
       const errorResponse = await response.json();
@@ -55,7 +50,6 @@ const translateContent = async (
     }
 
     const data = await response.json();
-    console.log("Translation API Response:", data);
 
     return data.translatedContent;
   } catch (error) {

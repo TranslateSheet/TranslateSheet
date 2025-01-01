@@ -5,7 +5,6 @@ import extractTranslations from "./extractTranslations";
 import generatePrimaryLanguageFile from "./generatePrimaryLanguageFile";
 import generateTranslatedFiles from "./generateTranslatedFiles";
 
-
 /**
  * Command-line interface setup with Commander.
  */
@@ -16,10 +15,14 @@ program
   .option(
     "--languages <languages>",
     "Comma-separated list of target languages",
-    undefined,
+    undefined
   )
   .option("--apiKey <apiKey>", "OpenAI API key", undefined)
-  .option("--config <config>", "Path to configuration file", "./translateSheetConfig.js")
+  .option(
+    "--config <config>",
+    "Path to configuration file",
+    "./translateSheetConfig.js"
+  )
   .action(async (cmd) => {
     const { output, language, languages, apiKey, config: configPath } = cmd;
 
@@ -37,13 +40,12 @@ program
       apiKey: apiKey || config.apiKey,
     };
 
-    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, apiKey: finalApiKey } =
-      mergedConfig;
-
-    if (!finalApiKey) {
-      console.error("API key is required. Provide it via config or CLI options.");
-      process.exit(1);
-    }
+    const {
+      output: finalOutput,
+      language: finalLanguage,
+      languages: finalLanguages,
+      apiKey: finalApiKey,
+    } = mergedConfig;
 
     // Extract translations
     console.log("Extracting translations...");
@@ -55,15 +57,21 @@ program
 
     // Generate translations for target languages
     if (finalLanguages.length > 0) {
+      if (!finalApiKey) {
+        console.error(
+          "API key is required. Provide it via config or CLI options."
+        );
+        process.exit(1);
+      }
+
       console.log("Generating translations for target languages...");
       await generateTranslatedFiles(
         finalOutput,
         primaryTranslations,
         finalLanguages,
-        finalApiKey,
+        finalApiKey
       );
     }
   });
-
 
 program.parse(process.argv);

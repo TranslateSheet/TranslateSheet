@@ -32,11 +32,7 @@ commander_1.program
             [],
         apiKey: apiKey || config.apiKey,
     };
-    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, apiKey: finalApiKey } = mergedConfig;
-    if (!finalApiKey) {
-        console.error("API key is required. Provide it via config or CLI options.");
-        process.exit(1);
-    }
+    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, apiKey: finalApiKey, } = mergedConfig;
     // Extract translations
     console.log("Extracting translations...");
     const primaryTranslations = (0, extractTranslations_1.default)();
@@ -45,6 +41,10 @@ commander_1.program
     (0, generatePrimaryLanguageFile_1.default)(finalOutput, primaryTranslations);
     // Generate translations for target languages
     if (finalLanguages.length > 0) {
+        if (!finalApiKey) {
+            console.error("API key is required. Provide it via config or CLI options.");
+            process.exit(1);
+        }
         console.log("Generating translations for target languages...");
         await (0, generateTranslatedFiles_1.default)(finalOutput, primaryTranslations, finalLanguages, finalApiKey);
     }
