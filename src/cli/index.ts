@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import { program } from "commander";
 import loadConfig from "./loadConfig";
 import extractTranslations from "./extractTranslations";
