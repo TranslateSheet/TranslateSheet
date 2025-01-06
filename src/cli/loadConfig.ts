@@ -10,7 +10,7 @@ const loadConfig = (configPath = "./translateSheetConfig.js") => {
   if (existsSync(configPath)) {
     try {
       const config = require(path.resolve(configPath));
-      return config.translateSheetConfig;
+      return config;
     } catch (error) {
       console.error(`Failed to load config file at ${configPath}:`, error);
       process.exit(1);
