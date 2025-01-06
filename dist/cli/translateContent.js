@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Translate content using the TranslateSheet backend API.
  */
-const translateContent = async (content, targetLanguage, apiKey) => {
+const translateContent = async ({ content, targetLanguage, apiKey, }) => {
     try {
         console.log("Sending translation request...");
         const response = await fetch("https://api.translatesheet.co/api/translations", {

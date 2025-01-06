@@ -17,6 +17,7 @@ program
     "Comma-separated list of target languages",
     undefined
   )
+  .option("--fileExtension <fileExtension>", "File extension", undefined)
   .option("--apiKey <apiKey>", "OpenAI API key", undefined)
   .option(
     "--config <config>",
@@ -24,7 +25,14 @@ program
     "./translateSheetConfig.js"
   )
   .action(async (cmd) => {
-    const { output, language, languages, apiKey, config: configPath } = cmd;
+    const {
+      output,
+      language,
+      languages,
+      apiKey,
+      fileExtension,
+      config: configPath,
+    } = cmd;
 
     // Load configuration from file
     const config = loadConfig(configPath);
@@ -37,6 +45,7 @@ program
         languages?.split(",").map((lang: string) => lang.trim()) ||
         config.languages ||
         [],
+      fileExtension: fileExtension || config.fileExtension || ".ts",
       apiKey: apiKey || config.apiKey,
     };
 
@@ -44,16 +53,22 @@ program
       output: finalOutput,
       language: finalLanguage,
       languages: finalLanguages,
+      fileExtension: finalExtension,
       apiKey: finalApiKey,
     } = mergedConfig;
 
     // Extract translations
     console.log("Extracting translations...");
+    console.log("FILE EXTENSION:", { finalExtension });
     const primaryTranslations = extractTranslations();
 
     // Generate primary language file
     console.log(`Generating primary language file (${finalLanguage})...`);
-    generatePrimaryLanguageFile(finalOutput, primaryTranslations);
+    generatePrimaryLanguageFile({
+      outputDir: finalOutput,
+      translations: primaryTranslations,
+      fileExtension: finalExtension
+    });
 
     // Generate translations for target languages
     if (finalLanguages.length > 0) {
@@ -65,12 +80,13 @@ program
       }
 
       console.log("Generating translations for target languages...");
-      await generateTranslatedFiles(
-        finalOutput,
-        primaryTranslations,
-        finalLanguages,
-        finalApiKey
-      );
+      await generateTranslatedFiles({
+        outputDir: finalOutput,
+        primaryContent: primaryTranslations,
+        languages: finalLanguages,
+        fileExtension: finalExtension,
+        apiKey: finalApiKey,
+      });
     }
   });
 

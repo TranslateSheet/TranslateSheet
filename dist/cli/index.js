@@ -17,10 +17,11 @@ commander_1.program
     .option("--output <output>", "Output directory", undefined)
     .option("--language <language>", "Primary language", undefined)
     .option("--languages <languages>", "Comma-separated list of target languages", undefined)
+    .option("--fileExtension <fileExtension>", "File extension", undefined)
     .option("--apiKey <apiKey>", "OpenAI API key", undefined)
     .option("--config <config>", "Path to configuration file", "./translateSheetConfig.js")
     .action(async (cmd) => {
-    const { output, language, languages, apiKey, config: configPath } = cmd;
+    const { output, language, languages, apiKey, fileExtension, config: configPath, } = cmd;
     // Load configuration from file
     const config = (0, loadConfig_1.default)(configPath);
     // Merge CLI options with config file values
@@ -30,15 +31,21 @@ commander_1.program
         languages: (languages === null || languages === void 0 ? void 0 : languages.split(",").map((lang) => lang.trim())) ||
             config.languages ||
             [],
+        fileExtension: fileExtension || config.fileExtension || ".ts",
         apiKey: apiKey || config.apiKey,
     };
-    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, apiKey: finalApiKey, } = mergedConfig;
+    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, fileExtension: finalExtension, apiKey: finalApiKey, } = mergedConfig;
     // Extract translations
     console.log("Extracting translations...");
+    console.log("FILE EXTENSION:", { finalExtension });
     const primaryTranslations = (0, extractTranslations_1.default)();
     // Generate primary language file
     console.log(`Generating primary language file (${finalLanguage})...`);
-    (0, generatePrimaryLanguageFile_1.default)(finalOutput, primaryTranslations);
+    (0, generatePrimaryLanguageFile_1.default)({
+        outputDir: finalOutput,
+        translations: primaryTranslations,
+        fileExtension: finalExtension
+    });
     // Generate translations for target languages
     if (finalLanguages.length > 0) {
         if (!finalApiKey) {
@@ -46,7 +53,13 @@ commander_1.program
             process.exit(1);
         }
         console.log("Generating translations for target languages...");
-        await (0, generateTranslatedFiles_1.default)(finalOutput, primaryTranslations, finalLanguages, finalApiKey);
+        await (0, generateTranslatedFiles_1.default)({
+            outputDir: finalOutput,
+            primaryContent: primaryTranslations,
+            languages: finalLanguages,
+            fileExtension: finalExtension,
+            apiKey: finalApiKey,
+        });
     }
 });
 commander_1.program.parse(process.argv);

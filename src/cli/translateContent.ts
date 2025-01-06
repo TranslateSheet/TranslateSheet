@@ -1,11 +1,15 @@
 /**
  * Translate content using the TranslateSheet backend API.
  */
-const translateContent = async (
-  content: Record<string, any>,
-  targetLanguage: string,
-  apiKey: string
-): Promise<Record<string, any>> => {
+const translateContent = async ({
+  content,
+  targetLanguage,
+  apiKey,
+}: {
+  content: Record<string, any>;
+  targetLanguage: string;
+  apiKey: string;
+}): Promise<Record<string, any>> => {
   try {
     console.log("Sending translation request...");
 
@@ -26,7 +30,7 @@ const translateContent = async (
 
     if (!response.ok) {
       const errorResponse = await response.json();
-      console.log(response.status)
+      console.log(response.status);
       if (response.status === 403) {
         throw new Error(
           "API key is invalid or disabled. Please check your API key."
