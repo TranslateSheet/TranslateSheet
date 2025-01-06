@@ -3,8 +3,12 @@ import i18n, { TOptions } from "i18next";
 const TranslateSheet = {
   create<T extends Record<string, string | ((...args: any[]) => string)>>(
     namespace: string,
-    translations: T,
+    translations: T
   ) {
+
+    // fs and path inside of loadConfig are holding back dynamic primary languages
+    const primaryLanguage =  "en";
+
     const processedTranslations: Record<string, any> = {};
 
     Object.keys(translations).forEach((key) => {
@@ -17,14 +21,23 @@ const TranslateSheet = {
         // Handle interpolated strings
         processedTranslations[key] = (
           options?: Record<string, any>,
-          additionalOptions?: TOptions,
+          additionalOptions?: TOptions
         ) => {
+          if (i18n?.language?.includes(primaryLanguage)) {
+            // Directly replace placeholders for primary language
+            return value.replace(
+              /\{\{(.*?)\}\}/g,
+              (_, p1) => options?.[p1] ?? `{{ ${p1} }}`
+            );
+          }
+
           if (!i18n.isInitialized) {
             console.warn(
-              `[TranslateSheet] i18n not initialized for key: ${namespace}:${key}`,
+              `[TranslateSheet] i18n not initialized for key: ${namespace}:${key}`
             );
             return value; // Fallback to raw string
           }
+
           return i18n.t(`${namespace}:${key}`, {
             ...options,
             ...additionalOptions, // Pass additional options like format
@@ -35,15 +48,20 @@ const TranslateSheet = {
         // Handle static strings with caching
         Object.defineProperty(processedTranslations, key, {
           get: () => {
+            if (i18n?.language?.includes(primaryLanguage)) {
+              return value; // Directly return local value for primary language
+            }
+
             if (cachedValue !== null) {
-              return cachedValue;
+              return cachedValue; // Return cached value if available
             }
 
             if (!i18n.isInitialized) {
+              // Suppress warning if local value can be returned
               console.warn(
-                `[TranslateSheet] i18n not initialized for key: ${namespace}:${key}`,
+                `[TranslateSheet] i18n not initialized for key: ${namespace}:${key}`
               );
-              return value; // Return raw string without caching
+              return value; // Fallback to raw string without caching
             }
 
             cachedValue = i18n.t(`${namespace}:${key}`, {
@@ -72,7 +90,7 @@ const TranslateSheet = {
         : string &
             ((
               options?: Record<string, any>,
-              additionalOptions?: TOptions,
+              additionalOptions?: TOptions
             ) => string);
     };
   },

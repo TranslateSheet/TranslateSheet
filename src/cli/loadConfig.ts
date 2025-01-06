@@ -1,6 +1,8 @@
 import { existsSync } from "fs";
 import path from "path";
 
+// TODO: fs and path are holding pack dynamic primary languages
+
 /**
  * Load TranslateSheet configuration from a file.
  */
