@@ -6,9 +6,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const formatAsJSON_1 = __importDefault(require("./formatAsJSON"));
-const formatAsJavaScript_1 = __importDefault(require("./formatAsJavaScript"));
-const formatAsTypeScripts_1 = __importDefault(require("./formatAsTypeScripts"));
+const formatAsJSON_1 = __importDefault(require("../helpers/formatAsJSON"));
+const formatAsJavaScript_1 = __importDefault(require("../helpers/formatAsJavaScript"));
+const formatAsTypeScript_1 = __importDefault(require("../helpers/formatAsTypeScript"));
 const defaultLanguage = "en";
 /**
  * Generate the primary language file.
@@ -17,7 +17,7 @@ const generatePrimaryLanguageFile = ({ outputDir, translations, fileExtension, }
     let formattedContent;
     // Conditionally format the content based on file extension
     if (fileExtension === ".ts") {
-        formattedContent = (0, formatAsTypeScripts_1.default)(translations, defaultLanguage);
+        formattedContent = (0, formatAsTypeScript_1.default)(translations, defaultLanguage);
     }
     else if (fileExtension === ".js") {
         formattedContent = (0, formatAsJavaScript_1.default)(translations, defaultLanguage);

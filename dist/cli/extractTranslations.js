@@ -30,9 +30,10 @@ const glob = __importStar(require("glob"));
 const fs_1 = __importDefault(require("fs"));
 /**
  * Extract translations from the codebase.
+ * @returns {Record<string, any>} An object containing translations grouped by namespace.
  */
 const extractTranslations = () => {
-    const files = glob.sync("**/*.tsx");
+    const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}");
     const translations = {};
     files.forEach((file) => {
         const content = fs_1.default.readFileSync(file, "utf-8");

@@ -3,9 +3,10 @@ import fs from "fs";
 
 /**
  * Extract translations from the codebase.
+ * @returns {Record<string, any>} An object containing translations grouped by namespace.
  */
 const extractTranslations = (): Record<string, any> => {
-  const files = glob.sync("**/*.tsx");
+  const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}");
   const translations: Record<string, any> = {};
 
   files.forEach((file) => {

@@ -2,9 +2,9 @@ import translateContent from "./translateContent";
 import fs from "fs";
 import path from "path";
 import { FileExtensions } from "../types";
-import formatAsTypeScript from "./formatAsTypeScripts";
-import formatAsJavaScript from "./formatAsJavaScript";
-import formatAsJSON from "./formatAsJSON";
+import formatAsTypeScript from "../helpers/formatAsTypeScript";
+import formatAsJavaScript from "../helpers/formatAsJavaScript";
+import formatAsJSON from "../helpers/formatAsJSON";
 
 /**
  * Generate translated files for target languages.

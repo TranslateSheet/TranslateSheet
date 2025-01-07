@@ -2,9 +2,9 @@
 import fs from "fs";
 import path from "path";
 import { FileExtensions } from "../types";
-import formatAsJSON from "./formatAsJSON";
-import formatAsJavaScript from "./formatAsJavaScript";
-import formatAsTypeScript from "./formatAsTypeScripts";
+import formatAsJSON from "../helpers/formatAsJSON";
+import formatAsJavaScript from "../helpers/formatAsJavaScript";
+import formatAsTypeScript from "../helpers/formatAsTypeScript";
 
 const defaultLanguage = "en";
 

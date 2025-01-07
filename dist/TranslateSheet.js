@@ -6,7 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const i18next_1 = __importDefault(require("i18next"));
 const TranslateSheet = {
     create(namespace, translations) {
-        // fs and path inside of loadConfig are holding back dynamic primary languages
+        // Check for duplicate namespace
+        // handleNamespaceRegistry({ namespace });
+        //TODO: fs and path inside of loadConfig are holding back dynamic primary languages
         const primaryLanguage = "en";
         const processedTranslations = {};
         Object.keys(translations).forEach((key) => {

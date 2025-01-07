@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const translateContent_1 = __importDefault(require("./translateContent"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const formatAsTypeScripts_1 = __importDefault(require("./formatAsTypeScripts"));
-const formatAsJavaScript_1 = __importDefault(require("./formatAsJavaScript"));
-const formatAsJSON_1 = __importDefault(require("./formatAsJSON"));
+const formatAsTypeScript_1 = __importDefault(require("../helpers/formatAsTypeScript"));
+const formatAsJavaScript_1 = __importDefault(require("../helpers/formatAsJavaScript"));
+const formatAsJSON_1 = __importDefault(require("../helpers/formatAsJSON"));
 /**
  * Generate translated files for target languages.
  */
@@ -27,7 +27,7 @@ const generateTranslatedFiles = async ({ outputDir, primaryContent, languages, f
                 formattedContent = (0, formatAsJavaScript_1.default)(translatedContent, lang);
             }
             else if (fileExtension === ".ts") {
-                formattedContent = (0, formatAsTypeScripts_1.default)(translatedContent, lang);
+                formattedContent = (0, formatAsTypeScript_1.default)(translatedContent, lang);
             }
             else if (fileExtension === ".json") {
                 formattedContent = (0, formatAsJSON_1.default)(translatedContent);

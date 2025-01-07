@@ -9,6 +9,7 @@ const loadConfig_1 = __importDefault(require("./loadConfig"));
 const extractTranslations_1 = __importDefault(require("./extractTranslations"));
 const generatePrimaryLanguageFile_1 = __importDefault(require("./generatePrimaryLanguageFile"));
 const generateTranslatedFiles_1 = __importDefault(require("./generateTranslatedFiles"));
+const detectDuplicateNamespaces_1 = __importDefault(require("../helpers/detectDuplicateNamespaces"));
 /**
  * Command-line interface setup with Commander.
  */
@@ -37,14 +38,15 @@ commander_1.program
     const { output: finalOutput, language: finalLanguage, languages: finalLanguages, fileExtension: finalExtension, apiKey: finalApiKey, } = mergedConfig;
     // Extract translations
     console.log("Extracting translations...");
-    console.log("FILE EXTENSION:", { finalExtension });
     const primaryTranslations = (0, extractTranslations_1.default)();
+    // Detect and throw an error on duplicate namespaces
+    (0, detectDuplicateNamespaces_1.default)(primaryTranslations);
     // Generate primary language file
     console.log(`Generating primary language file (${finalLanguage})...`);
     (0, generatePrimaryLanguageFile_1.default)({
         outputDir: finalOutput,
         translations: primaryTranslations,
-        fileExtension: finalExtension
+        fileExtension: finalExtension,
     });
     // Generate translations for target languages
     if (finalLanguages.length > 0) {

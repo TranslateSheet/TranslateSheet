@@ -4,6 +4,7 @@ import loadConfig from "./loadConfig";
 import extractTranslations from "./extractTranslations";
 import generatePrimaryLanguageFile from "./generatePrimaryLanguageFile";
 import generateTranslatedFiles from "./generateTranslatedFiles";
+import detectDuplicateNamespaces from "../helpers/detectDuplicateNamespaces";
 
 /**
  * Command-line interface setup with Commander.
@@ -59,15 +60,17 @@ program
 
     // Extract translations
     console.log("Extracting translations...");
-    console.log("FILE EXTENSION:", { finalExtension });
     const primaryTranslations = extractTranslations();
+
+    // Detect and throw an error on duplicate namespaces
+    detectDuplicateNamespaces(primaryTranslations);
 
     // Generate primary language file
     console.log(`Generating primary language file (${finalLanguage})...`);
     generatePrimaryLanguageFile({
       outputDir: finalOutput,
       translations: primaryTranslations,
-      fileExtension: finalExtension
+      fileExtension: finalExtension,
     });
 
     // Generate translations for target languages
