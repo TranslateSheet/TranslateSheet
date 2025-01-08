@@ -1,8 +1,8 @@
 {
   "name": "translate-sheet",
-  "version": "0.2.6",
+  "version": "0.2.9",
   "description": "translations made easy",
-  "main": "xwdist/index.js",
+  "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
