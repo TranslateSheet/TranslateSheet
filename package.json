@@ -8,7 +8,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "prepublish": "npm version patch -m \"chore(release): %s\" && npm run build"
+    "prepublish": "npm version patch -m \"chore(release): %s\" && npm run build",
+    "typesafe-i18n": "typesafe-i18n"
   },
   "keywords": [
     "translate",
@@ -21,6 +22,7 @@
   "author": "Brandon Austin",
   "license": "ISC",
   "peerDependencies": {
+    "i18n-js": "^4.5.1",
     "i18next": "^24.0.5"
   },
   "repository": {
