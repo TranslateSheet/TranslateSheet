@@ -1,1 +1,59 @@
 export type FileExtensions = ".ts" | ".js" | ".json";
+
+/**
+ * Custom localization adapter interface for users who want to provide their own implementation.
+ */
+export interface LocalizationAdapter {
+  /**
+   * Translates a given key with optional interpolation options.
+   * @param key - The key for the translation.
+   * @param options - Optional object containing variables for interpolation.
+   * @returns The translated string.
+   */
+  translate: (key: string, options?: Record<string, any>) => string;
+
+  /**
+   * Sets the current language for the adapter.
+   * @param language - The language to set (e.g., "en", "es").
+   */
+  setLanguage: (language: string) => void;
+
+  /**
+   * Gets the current language used by the adapter.
+   * @returns The current language code.
+   */
+  getLanguage: () => string;
+}
+
+/**
+ * Predefined adapters supported by TranslateSheet out of the box.
+ */
+export type PredefinedAdapters = "i18next" | "i18n-js";
+
+/**
+ * Adapter type can be either a predefined adapter string or a custom implementation.
+ */
+export type Adapter = PredefinedAdapters | LocalizationAdapter;
+
+/**
+ * Configuration options for initializing TranslateSheet.
+ */
+export interface TranslateSheetConfig {
+  /** The API key used for AI-powered translations */
+  apiKey?: string;
+
+  /** The primary language of the project (e.g., "en" for English) */
+  primaryLanguage?: string;
+
+  /** An array of target languages for translation (e.g., ["es", "fr", "de"]) */
+  languages?: string[];
+
+  /** The file extension for the generated translation files */
+  fileExtension?: FileExtensions;
+
+  /**
+   * The adapter used for localization.
+   * Can be a predefined string ("i18next", "i18n-js") or a custom adapter.
+   */
+  adapter?: Adapter;
+}
