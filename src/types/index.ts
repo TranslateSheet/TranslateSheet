@@ -22,4 +22,46 @@ export interface TranslateSheetConfig {
 
   /** The output directory where the generated translation files will be saved */
   generatePrimaryLanguageFile: string | boolean;
+
+  /**
+   * The adapter used for localization.
+   * Can be a predefined string ("i18next", "i18n-js") or a custom adapter.
+   */
+  adapter?: Adapter;
 }
+
+/**
+ * Custom localization adapter interface for users who want to provide their own implementation.
+ */
+export interface LocalizationAdapter {
+  /**
+   * Translates a given key with optional interpolation options.
+   * @param key - The key for the translation.
+   * @param options - Optional object containing variables for interpolation.
+   * @returns The translated string.
+   */
+  translate: (key: string, options?: Record<string, any>) => string;
+
+  /**
+   * Sets the current language for the adapter.
+   * @param language - The language to set (e.g., "en", "es").
+   */
+  setLanguage: (language: string) => void;
+
+  /**
+   * Gets the current language used by the adapter.
+   * @returns The current language code.
+   */
+  getLanguage: () => string;
+}
+
+/**
+ * Predefined adapters supported by TranslateSheet out of the box.
+ */
+export type PredefinedAdapters = "i18next" | "i18n-js";
+
+/**
+ * Adapter type can be either a predefined adapter string or a custom implementation.
+ */
+export type Adapter = PredefinedAdapters | LocalizationAdapter;
+
