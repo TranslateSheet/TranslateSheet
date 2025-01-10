@@ -2,8 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Generate a JavaScript object string with unquoted keys, except for keys with dashes, and add trailing commas.
+ * Ensures that language codes with hyphens are converted to valid JavaScript variable names by replacing hyphens with underscores.
  */
 const formatAsJavaScript = (content, targetLanguage) => {
+    // Replace hyphens with underscores for the variable name
+    const sanitizedLanguage = targetLanguage.replace(/-/g, "_");
     const formatObject = (obj, indent = 2) => {
         return Object.entries(obj)
             .map(([key, value]) => {
@@ -18,6 +21,6 @@ const formatAsJavaScript = (content, targetLanguage) => {
             .join("\n");
     };
     const objectString = formatObject(content);
-    return `const ${targetLanguage} = {\n${objectString}\n};\nexport default ${targetLanguage};`;
+    return `const ${sanitizedLanguage} = {\n${objectString}\n};\nexport default ${sanitizedLanguage};`;
 };
 exports.default = formatAsJavaScript;
