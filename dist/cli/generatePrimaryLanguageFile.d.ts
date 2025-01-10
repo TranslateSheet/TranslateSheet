@@ -1,11 +1,9 @@
 #!/usr/bin/env node
-import { FileExtensions } from "../types";
+import { TranslateSheetConfig } from "../types";
 /**
  * Generate the primary language file.
  */
-declare const generatePrimaryLanguageFile: ({ outputDir, translations, fileExtension, }: {
-    outputDir: string;
+declare const generatePrimaryLanguageFile: ({ output, fileExtension, primaryLanguage, translations, }: Omit<TranslateSheetConfig, "apiKey" | "languages"> & {
     translations: Record<string, any>;
-    fileExtension: FileExtensions;
 }) => void;
 export default generatePrimaryLanguageFile;

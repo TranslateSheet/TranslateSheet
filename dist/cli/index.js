@@ -16,37 +16,38 @@ const detectDuplicateNamespaces_1 = __importDefault(require("../helpers/detectDu
 commander_1.program
     .command("generate")
     .option("--output <output>", "Output directory", undefined)
-    .option("--language <language>", "Primary language", undefined)
+    .option("--primaryLanguage <primaryLanguage>", "Primary language", undefined)
     .option("--languages <languages>", "Comma-separated list of target languages", undefined)
     .option("--fileExtension <fileExtension>", "File extension", undefined)
     .option("--apiKey <apiKey>", "OpenAI API key", undefined)
     .option("--config <config>", "Path to configuration file", "./translateSheetConfig.js")
     .action(async (cmd) => {
-    const { output, language, languages, apiKey, fileExtension, config: configPath, } = cmd;
+    const { output, primaryLanguage, languages, apiKey, fileExtension, config: configPath, } = cmd;
     // Load configuration from file
     const config = (0, loadConfig_1.default)(configPath);
     // Merge CLI options with config file values
     const mergedConfig = {
         output: output || config.output || "./i18n",
-        language: language || config.primaryLanguage || "en",
+        primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
         languages: (languages === null || languages === void 0 ? void 0 : languages.split(",").map((lang) => lang.trim())) ||
             config.languages ||
             [],
         fileExtension: fileExtension || config.fileExtension || ".ts",
         apiKey: apiKey || config.apiKey,
     };
-    const { output: finalOutput, language: finalLanguage, languages: finalLanguages, fileExtension: finalExtension, apiKey: finalApiKey, } = mergedConfig;
+    const { output: finalOutput, primaryLanguage: finalPrimaryLanguage, languages: finalLanguages, fileExtension: finalExtension, apiKey: finalApiKey, } = mergedConfig;
     // Extract translations
     console.log("Extracting translations...");
     const primaryTranslations = (0, extractTranslations_1.default)();
     // Detect and throw an error on duplicate namespaces
     (0, detectDuplicateNamespaces_1.default)(primaryTranslations);
     // Generate primary language file
-    console.log(`Generating primary language file (${finalLanguage})...`);
+    console.log(`Generating primary language file (${finalPrimaryLanguage})...`);
     (0, generatePrimaryLanguageFile_1.default)({
-        outputDir: finalOutput,
+        output: finalOutput,
         translations: primaryTranslations,
         fileExtension: finalExtension,
+        primaryLanguage: finalPrimaryLanguage
     });
     // Generate translations for target languages
     if (finalLanguages.length > 0) {

@@ -5,8 +5,6 @@ const TranslateSheet = {
     namespace: string,
     translations: T
   ) {
-    // Check for duplicate namespace
-    // handleNamespaceRegistry({ namespace });
 
     //TODO: fs and path inside of loadConfig are holding back dynamic primary languages
     const primaryLanguage = "en";

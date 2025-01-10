@@ -28,6 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const glob = __importStar(require("glob"));
 const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 /**
  * Extract translations from the codebase.
  * @returns {Record<string, any>} An object containing translations grouped by namespace.
@@ -36,7 +37,12 @@ const extractTranslations = () => {
     const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}");
     const translations = {};
     files.forEach((file) => {
-        const content = fs_1.default.readFileSync(file, "utf-8");
+        const filePath = path_1.default.resolve(file);
+        // Skip directories
+        if (fs_1.default.statSync(filePath).isDirectory()) {
+            return;
+        }
+        const content = fs_1.default.readFileSync(filePath, "utf-8");
         const regex = /TranslateSheet\.create\("([^"]+)",\s*({[\s\S]*?})\)/g;
         let match;
         while ((match = regex.exec(content)) !== null) {

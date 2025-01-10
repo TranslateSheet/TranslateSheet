@@ -1,7 +1,7 @@
 import translateContent from "./translateContent";
 import fs from "fs";
 import path from "path";
-import { FileExtensions } from "../types";
+import { TranslateSheetConfig } from "../types";
 import formatAsTypeScript from "../helpers/formatAsTypeScript";
 import formatAsJavaScript from "../helpers/formatAsJavaScript";
 import formatAsJSON from "../helpers/formatAsJSON";
@@ -10,23 +10,19 @@ import formatAsJSON from "../helpers/formatAsJSON";
  * Generate translated files for target languages.
  */
 const generateTranslatedFiles = async ({
-  outputDir,
-  primaryContent,
+  output,
+  primaryLanguageTranslations,
   languages,
   fileExtension,
   apiKey,
-}: {
-  outputDir: string;
-  primaryContent: Record<string, any>;
-  languages: string[];
-  fileExtension: FileExtensions;
-  apiKey: string;
-}) => {
+}: Omit<TranslateSheetConfig, "primaryLanguage"> & {
+  primaryLanguageTranslations: Record<string, any>;
+}): Promise<undefined> => {
   for (const lang of languages) {
     console.log(`Translating content to ${lang}...`);
     try {
       const translatedContent = await translateContent({
-        content: primaryContent,
+        content: primaryLanguageTranslations,
         targetLanguage: lang,
         apiKey,
       });
@@ -43,7 +39,7 @@ const generateTranslatedFiles = async ({
         throw new Error(`Unsupported file extension: ${fileExtension}`);
       }
 
-      const filePath = path.join(outputDir, `${lang}${fileExtension}`);
+      const filePath = path.join(output, `${lang}${fileExtension}`);
       // Write the formatted content to the appropriate file
       fs.writeFileSync(filePath, formattedContent, "utf-8");
       console.log(`Generated translation file: ${filePath}`);

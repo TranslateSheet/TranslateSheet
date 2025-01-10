@@ -5,6 +5,7 @@ import extractTranslations from "./extractTranslations";
 import generatePrimaryLanguageFile from "./generatePrimaryLanguageFile";
 import generateTranslatedFiles from "./generateTranslatedFiles";
 import detectDuplicateNamespaces from "../helpers/detectDuplicateNamespaces";
+import { TranslateSheetConfig } from "../types";
 
 /**
  * Command-line interface setup with Commander.
@@ -12,7 +13,7 @@ import detectDuplicateNamespaces from "../helpers/detectDuplicateNamespaces";
 program
   .command("generate")
   .option("--output <output>", "Output directory", undefined)
-  .option("--language <language>", "Primary language", undefined)
+  .option("--primaryLanguage <primaryLanguage>", "Primary language", undefined)
   .option(
     "--languages <languages>",
     "Comma-separated list of target languages",
@@ -28,7 +29,7 @@ program
   .action(async (cmd) => {
     const {
       output,
-      language,
+      primaryLanguage,
       languages,
       apiKey,
       fileExtension,
@@ -39,9 +40,9 @@ program
     const config = loadConfig(configPath);
 
     // Merge CLI options with config file values
-    const mergedConfig = {
+    const mergedConfig: TranslateSheetConfig = {
       output: output || config.output || "./i18n",
-      language: language || config.primaryLanguage || "en",
+      primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
       languages:
         languages?.split(",").map((lang: string) => lang.trim()) ||
         config.languages ||
@@ -52,7 +53,7 @@ program
 
     const {
       output: finalOutput,
-      language: finalLanguage,
+      primaryLanguage: finalPrimaryLanguage,
       languages: finalLanguages,
       fileExtension: finalExtension,
       apiKey: finalApiKey,
@@ -60,17 +61,20 @@ program
 
     // Extract translations
     console.log("Extracting translations...");
-    const primaryTranslations = extractTranslations();
+    const primaryLanguageTranslations = extractTranslations();
 
     // Detect and throw an error on duplicate namespaces
-    detectDuplicateNamespaces(primaryTranslations);
+    detectDuplicateNamespaces(primaryLanguageTranslations);
 
     // Generate primary language file
-    console.log(`Generating primary language file (${finalLanguage})...`);
+    console.log(`Generating primary language file (${finalPrimaryLanguage})...`);
+
+    
     generatePrimaryLanguageFile({
-      outputDir: finalOutput,
-      translations: primaryTranslations,
+      output: finalOutput,
+      primaryLanguageTranslations,
       fileExtension: finalExtension,
+      primaryLanguage: finalPrimaryLanguage
     });
 
     // Generate translations for target languages
@@ -84,8 +88,8 @@ program
 
       console.log("Generating translations for target languages...");
       await generateTranslatedFiles({
-        outputDir: finalOutput,
-        primaryContent: primaryTranslations,
+        output: finalOutput,
+        primaryLanguageTranslations,
         languages: finalLanguages,
         fileExtension: finalExtension,
         apiKey: finalApiKey,

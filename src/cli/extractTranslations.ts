@@ -1,5 +1,6 @@
 import * as glob from "glob";
 import fs from "fs";
+import path from "path";
 
 /**
  * Extract translations from the codebase.
@@ -10,7 +11,14 @@ const extractTranslations = (): Record<string, any> => {
   const translations: Record<string, any> = {};
 
   files.forEach((file) => {
-    const content = fs.readFileSync(file, "utf-8");
+    const filePath = path.resolve(file);
+
+    // Skip directories
+    if (fs.statSync(filePath).isDirectory()) {
+      return;
+    }
+
+    const content = fs.readFileSync(filePath, "utf-8");
     const regex = /TranslateSheet\.create\("([^"]+)",\s*({[\s\S]*?})\)/g;
     let match;
 
