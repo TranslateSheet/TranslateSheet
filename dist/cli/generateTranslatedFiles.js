@@ -12,12 +12,14 @@ const formatAsJSON_1 = __importDefault(require("../helpers/formatAsJSON"));
 /**
  * Generate translated files for target languages.
  */
-const generateTranslatedFiles = async ({ outputDir, primaryContent, languages, fileExtension, apiKey, }) => {
+const generateTranslatedFiles = async ({ output, primaryLanguageTranslations, languages, fileExtension, apiKey, }) => {
+    const imports = [];
+    const resources = [];
     for (const lang of languages) {
         console.log(`Translating content to ${lang}...`);
         try {
             const translatedContent = await (0, translateContent_1.default)({
-                content: primaryContent,
+                content: primaryLanguageTranslations,
                 targetLanguage: lang,
                 apiKey,
             });
@@ -35,14 +37,30 @@ const generateTranslatedFiles = async ({ outputDir, primaryContent, languages, f
             else {
                 throw new Error(`Unsupported file extension: ${fileExtension}`);
             }
-            const filePath = path_1.default.join(outputDir, `${lang}${fileExtension}`);
+            const filePath = path_1.default.join(output, `${lang}${fileExtension}`);
             // Write the formatted content to the appropriate file
             fs_1.default.writeFileSync(filePath, formattedContent, "utf-8");
             console.log(`Generated translation file: ${filePath}`);
+            // Add to imports and resources for index.ts generation
+            imports.push(`import ${lang} from "./${lang}${fileExtension}";`);
+            resources.push(`"${lang}": ${lang}`);
         }
         catch (error) {
             console.error(`Failed to generate translation for ${lang}:`, error);
         }
     }
+    // Generate index.ts with dynamic imports and resource object
+    const indexContent = `
+${imports.join("\n")}
+
+const resources = {
+  ${resources.join(",\n  ")}
+};
+
+export default resources;
+`;
+    const indexFilePath = path_1.default.join(output, `index.${fileExtension}`);
+    fs_1.default.writeFileSync(indexFilePath, indexContent, "utf-8");
+    console.log(`Generated index.${fileExtension} file with all translations: ${indexFilePath}`);
 };
 exports.default = generateTranslatedFiles;

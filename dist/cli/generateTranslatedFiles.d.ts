@@ -1,12 +1,8 @@
-import { FileExtensions } from "../types";
+import { TranslateSheetConfig } from "../types";
 /**
  * Generate translated files for target languages.
  */
-declare const generateTranslatedFiles: ({ outputDir, primaryContent, languages, fileExtension, apiKey, }: {
-    outputDir: string;
-    primaryContent: Record<string, any>;
-    languages: string[];
-    fileExtension: FileExtensions;
-    apiKey: string;
+declare const generateTranslatedFiles: ({ output, primaryLanguageTranslations, languages, fileExtension, apiKey, }: Omit<TranslateSheetConfig, "primaryLanguage"> & {
+    primaryLanguageTranslations: Record<string, any>;
 }) => Promise<void>;
 export default generateTranslatedFiles;

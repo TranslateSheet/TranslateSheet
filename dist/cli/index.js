@@ -38,14 +38,14 @@ commander_1.program
     const { output: finalOutput, primaryLanguage: finalPrimaryLanguage, languages: finalLanguages, fileExtension: finalExtension, apiKey: finalApiKey, } = mergedConfig;
     // Extract translations
     console.log("Extracting translations...");
-    const primaryTranslations = (0, extractTranslations_1.default)();
+    const primaryLanguageTranslations = (0, extractTranslations_1.default)();
     // Detect and throw an error on duplicate namespaces
-    (0, detectDuplicateNamespaces_1.default)(primaryTranslations);
+    (0, detectDuplicateNamespaces_1.default)(primaryLanguageTranslations);
     // Generate primary language file
     console.log(`Generating primary language file (${finalPrimaryLanguage})...`);
     (0, generatePrimaryLanguageFile_1.default)({
         output: finalOutput,
-        translations: primaryTranslations,
+        primaryLanguageTranslations,
         fileExtension: finalExtension,
         primaryLanguage: finalPrimaryLanguage
     });
@@ -57,8 +57,8 @@ commander_1.program
         }
         console.log("Generating translations for target languages...");
         await (0, generateTranslatedFiles_1.default)({
-            outputDir: finalOutput,
-            primaryContent: primaryTranslations,
+            output: finalOutput,
+            primaryLanguageTranslations,
             languages: finalLanguages,
             fileExtension: finalExtension,
             apiKey: finalApiKey,

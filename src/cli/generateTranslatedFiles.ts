@@ -17,7 +17,10 @@ const generateTranslatedFiles = async ({
   apiKey,
 }: Omit<TranslateSheetConfig, "primaryLanguage"> & {
   primaryLanguageTranslations: Record<string, any>;
-}): Promise<undefined> => {
+}): Promise<void> => {
+  const imports: string[] = [];
+  const resources: string[] = [];
+
   for (const lang of languages) {
     console.log(`Translating content to ${lang}...`);
     try {
@@ -43,10 +46,31 @@ const generateTranslatedFiles = async ({
       // Write the formatted content to the appropriate file
       fs.writeFileSync(filePath, formattedContent, "utf-8");
       console.log(`Generated translation file: ${filePath}`);
+
+      // Add to imports and resources for index.ts generation
+      imports.push(`import ${lang} from "./${lang}";`);
+      resources.push(`"${lang}": ${lang}`);
     } catch (error) {
       console.error(`Failed to generate translation for ${lang}:`, error);
     }
   }
+
+  // Generate index.ts with dynamic imports and resource object
+  const indexContent = `
+${imports.join("\n")}
+
+const resources = {
+  ${resources.join(",\n  ")}
+};
+
+export default resources;
+`;
+
+  const indexFilePath = path.join(output, `resources${fileExtension}`);
+  fs.writeFileSync(indexFilePath, indexContent, "utf-8");
+  console.log(
+    `Generated resources${fileExtension} file with all translations: ${indexFilePath}`
+  );
 };
 
 export default generateTranslatedFiles;

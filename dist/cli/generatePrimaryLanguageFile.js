@@ -12,17 +12,17 @@ const formatAsTypeScript_1 = __importDefault(require("../helpers/formatAsTypeScr
 /**
  * Generate the primary language file.
  */
-const generatePrimaryLanguageFile = ({ output, fileExtension, primaryLanguage, translations, }) => {
+const generatePrimaryLanguageFile = ({ output, fileExtension, primaryLanguage, primaryLanguageTranslations, }) => {
     let formattedContent;
     // Conditionally format the content based on file extension
     if (fileExtension === ".ts") {
-        formattedContent = (0, formatAsTypeScript_1.default)(translations, primaryLanguage);
+        formattedContent = (0, formatAsTypeScript_1.default)(primaryLanguageTranslations, primaryLanguage);
     }
     else if (fileExtension === ".js") {
-        formattedContent = (0, formatAsJavaScript_1.default)(translations, primaryLanguage);
+        formattedContent = (0, formatAsJavaScript_1.default)(primaryLanguageTranslations, primaryLanguage);
     }
     else if (fileExtension === ".json") {
-        formattedContent = (0, formatAsJSON_1.default)(translations);
+        formattedContent = (0, formatAsJSON_1.default)(primaryLanguageTranslations);
     }
     else {
         throw new Error(`Unsupported file extension: ${fileExtension}`);
