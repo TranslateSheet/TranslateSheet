@@ -1,10 +1,14 @@
 /**
  * Generate a TypeScript object string with unquoted keys, except for keys with dashes, and add trailing commas.
+ * Ensures that language codes with hyphens are converted to valid TypeScript variable names by replacing hyphens with underscores.
  */
 const formatAsTypeScript = (
   content: Record<string, any>,
   targetLanguage: string
 ): string => {
+  // Replace hyphens with underscores for the variable name
+  const sanitizedLanguage = targetLanguage.replace(/-/g, "_");
+
   const formatObject = (
     obj: Record<string, any>,
     indent: number = 2
@@ -27,7 +31,7 @@ const formatAsTypeScript = (
 
   const objectString = formatObject(content);
 
-  return `const ${targetLanguage}: Record<string, any> = {\n${objectString}\n};\nexport default ${targetLanguage};`;
+  return `const ${sanitizedLanguage}: Record<string, any> = {\n${objectString}\n};\nexport default ${sanitizedLanguage};`;
 };
 
 export default formatAsTypeScript;
