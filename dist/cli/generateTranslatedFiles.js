@@ -42,7 +42,7 @@ const generateTranslatedFiles = async ({ output, primaryLanguageTranslations, la
             fs_1.default.writeFileSync(filePath, formattedContent, "utf-8");
             console.log(`Generated translation file: ${filePath}`);
             // Add to imports and resources for index.ts generation
-            imports.push(`import ${lang} from "./${lang}${fileExtension}";`);
+            imports.push(`import ${lang} from "./${lang}";`);
             resources.push(`"${lang}": ${lang}`);
         }
         catch (error) {
@@ -59,8 +59,8 @@ const resources = {
 
 export default resources;
 `;
-    const indexFilePath = path_1.default.join(output, `index.${fileExtension}`);
+    const indexFilePath = path_1.default.join(output, `resources${fileExtension}`);
     fs_1.default.writeFileSync(indexFilePath, indexContent, "utf-8");
-    console.log(`Generated index.${fileExtension} file with all translations: ${indexFilePath}`);
+    console.log(`Generated resources${fileExtension} file with all translations: ${indexFilePath}`);
 };
 exports.default = generateTranslatedFiles;
