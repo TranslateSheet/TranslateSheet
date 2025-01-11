@@ -1,14 +1,9 @@
 #!/usr/bin/env node
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-const formatAsJSON_1 = __importDefault(require("../helpers/formatAsJSON"));
-const formatAsJavaScript_1 = __importDefault(require("../helpers/formatAsJavaScript"));
-const formatAsTypeScript_1 = __importDefault(require("../helpers/formatAsTypeScript"));
+import fs from "fs";
+import path from "path";
+import formatAsJSON from "../helpers/formatAsJSON";
+import formatAsJavaScript from "../helpers/formatAsJavaScript";
+import formatAsTypeScript from "../helpers/formatAsTypeScript";
 /**
  * Generate the primary language file.
  */
@@ -16,21 +11,21 @@ const generatePrimaryLanguageFile = ({ output, fileExtension, primaryLanguage, p
     let formattedContent;
     // Conditionally format the content based on file extension
     if (fileExtension === ".ts") {
-        formattedContent = (0, formatAsTypeScript_1.default)(primaryLanguageTranslations, primaryLanguage);
+        formattedContent = formatAsTypeScript(primaryLanguageTranslations, primaryLanguage);
     }
     else if (fileExtension === ".js") {
-        formattedContent = (0, formatAsJavaScript_1.default)(primaryLanguageTranslations, primaryLanguage);
+        formattedContent = formatAsJavaScript(primaryLanguageTranslations, primaryLanguage);
     }
     else if (fileExtension === ".json") {
-        formattedContent = (0, formatAsJSON_1.default)(primaryLanguageTranslations);
+        formattedContent = formatAsJSON(primaryLanguageTranslations);
     }
     else {
         throw new Error(`Unsupported file extension: ${fileExtension}`);
     }
     // Determine file path and extension
-    const filePath = path_1.default.join(output, `${primaryLanguage}${fileExtension}`);
+    const filePath = path.join(output, `${primaryLanguage}${fileExtension}`);
     // Write the formatted content to the file
-    fs_1.default.writeFileSync(filePath, formattedContent, "utf-8");
+    fs.writeFileSync(filePath, formattedContent, "utf-8");
     console.log(`Generated primary language file: ${filePath}`);
 };
-exports.default = generatePrimaryLanguageFile;
+export default generatePrimaryLanguageFile;

@@ -1,12 +1,12 @@
 {
-    "compilerOptions": {
-      "declaration": true,
-      "module": "commonjs",
-      "target": "ES2019",
-      "outDir": "./dist",
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true
-    },
-    "include": ["src"]
-  }
+  "compilerOptions": {
+    "module": "ESNext",               // Output ES modules
+    "target": "ES2019",               // Target modern JavaScript
+    "outDir": "./dist",               // Output directory
+    "declaration": true,              // Generate type declarations
+    "moduleResolution": "Node",       // Resolve modules like Node.js
+    "esModuleInterop": true,          // Enable ES module interop
+    "strict": true                    // Enable strict type checking
+  },
+  "include": ["src"]
+}

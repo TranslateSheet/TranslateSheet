@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Translate content using the TranslateSheet backend API.
  */
@@ -39,4 +37,4 @@ const translateContent = async ({ content, targetLanguage, apiKey, }) => {
         throw error;
     }
 };
-exports.default = translateContent;
+export default translateContent;

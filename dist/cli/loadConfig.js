@@ -1,18 +1,13 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
-const path_1 = __importDefault(require("path"));
+import { existsSync } from "fs";
+import path from "path";
 // TODO: fs and path are holding pack dynamic primary languages
 /**
  * Load TranslateSheet configuration from a file.
  */
 const loadConfig = (configPath = "./translateSheetConfig.js") => {
-    if ((0, fs_1.existsSync)(configPath)) {
+    if (existsSync(configPath)) {
         try {
-            const config = require(path_1.default.resolve(configPath));
+            const config = require(path.resolve(configPath));
             return config;
         }
         catch (error) {
@@ -22,4 +17,4 @@ const loadConfig = (configPath = "./translateSheetConfig.js") => {
     }
     return {};
 };
-exports.default = loadConfig;
+export default loadConfig;

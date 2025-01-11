@@ -1,15 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const i18next_1 = __importDefault(require("i18next"));
+import i18n from "i18next";
 const TranslateSheet = {
     create(namespace, translations) {
         let i18nInitialized = false;
         let warnedAboutInitializationDelay = false;
         // Listen for i18next initialization and set the flag
-        i18next_1.default.on("initialized", () => {
+        i18n.on("initialized", () => {
             i18nInitialized = true;
         });
         // Warn if i18n is not initialized after a significant delay (500ms)
@@ -30,13 +25,13 @@ const TranslateSheet = {
                 processedTranslations[key] = (options, additionalOptions) => {
                     var _a;
                     // DEV mode: Directly return local value for primary language
-                    if ((_a = i18next_1.default === null || i18next_1.default === void 0 ? void 0 : i18next_1.default.language) === null || _a === void 0 ? void 0 : _a.includes(primaryLanguage)) {
+                    if ((_a = i18n === null || i18n === void 0 ? void 0 : i18n.language) === null || _a === void 0 ? void 0 : _a.includes(primaryLanguage)) {
                         return value.replace(/\{\{(.*?)\}\}/g, (_, p1) => { var _a; return (_a = options === null || options === void 0 ? void 0 : options[p1]) !== null && _a !== void 0 ? _a : `{{ ${p1} }}`; });
                     }
                     if (!i18nInitialized) {
                         return value; // Suppress warning during startup
                     }
-                    const result = i18next_1.default.t(`${namespace}:${key}`, {
+                    const result = i18n.t(`${namespace}:${key}`, {
                         ...options,
                         ...additionalOptions,
                         defaultValue: value,
@@ -54,7 +49,7 @@ const TranslateSheet = {
                     get: () => {
                         var _a;
                         // DEV mode: Directly return local value for primary language
-                        if ((_a = i18next_1.default === null || i18next_1.default === void 0 ? void 0 : i18next_1.default.language) === null || _a === void 0 ? void 0 : _a.includes(primaryLanguage)) {
+                        if ((_a = i18n === null || i18n === void 0 ? void 0 : i18n.language) === null || _a === void 0 ? void 0 : _a.includes(primaryLanguage)) {
                             return value;
                         }
                         if (cachedValue !== null) {
@@ -63,7 +58,7 @@ const TranslateSheet = {
                         if (!i18nInitialized) {
                             return value; // Suppress warning during startup
                         }
-                        cachedValue = i18next_1.default.t(`${namespace}:${key}`, {
+                        cachedValue = i18n.t(`${namespace}:${key}`, {
                             defaultValue: value,
                         });
                         // Log warning if translation is missing
@@ -90,4 +85,4 @@ const TranslateSheet = {
         });
     },
 };
-exports.default = TranslateSheet;
+export default TranslateSheet;

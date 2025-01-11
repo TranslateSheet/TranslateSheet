@@ -1,6 +1,6 @@
 {
   "name": "translate-sheet",
-  "version": "0.2.23",
+  "version": "0.2.25",
   "description": "translations made easy",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -39,7 +39,8 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   }
 }

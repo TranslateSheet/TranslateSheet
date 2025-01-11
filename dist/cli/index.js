@@ -1,19 +1,14 @@
 #!/usr/bin/env node
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const commander_1 = require("commander");
-const loadConfig_1 = __importDefault(require("./loadConfig"));
-const extractTranslations_1 = __importDefault(require("./extractTranslations"));
-const generatePrimaryLanguageFile_1 = __importDefault(require("./generatePrimaryLanguageFile"));
-const generateTranslatedFiles_1 = __importDefault(require("./generateTranslatedFiles"));
-const detectDuplicateNamespaces_1 = __importDefault(require("../helpers/detectDuplicateNamespaces"));
+import { program } from "commander";
+import loadConfig from "./loadConfig";
+import extractTranslations from "./extractTranslations";
+import generatePrimaryLanguageFile from "./generatePrimaryLanguageFile";
+import generateTranslatedFiles from "./generateTranslatedFiles";
+import detectDuplicateNamespaces from "../helpers/detectDuplicateNamespaces";
 /**
  * Command-line interface setup with Commander.
  */
-commander_1.program
+program
     .command("generate")
     .option("--output <output>", "Output directory", undefined)
     .option("--primaryLanguage <primaryLanguage>", "Primary language", undefined)
@@ -24,7 +19,7 @@ commander_1.program
     .action(async (cmd) => {
     const { output, primaryLanguage, languages, apiKey, fileExtension, config: configPath, } = cmd;
     // Load configuration from file
-    const config = (0, loadConfig_1.default)(configPath);
+    const config = loadConfig(configPath);
     // Merge CLI options with config file values
     const mergedConfig = {
         output: output || config.output || "./i18n",
@@ -38,12 +33,12 @@ commander_1.program
     const { output: finalOutput, primaryLanguage: finalPrimaryLanguage, languages: finalLanguages, fileExtension: finalExtension, apiKey: finalApiKey, } = mergedConfig;
     // Extract translations
     console.log("Extracting translations...");
-    const primaryLanguageTranslations = (0, extractTranslations_1.default)();
+    const primaryLanguageTranslations = extractTranslations();
     // Detect and throw an error on duplicate namespaces
-    (0, detectDuplicateNamespaces_1.default)(primaryLanguageTranslations);
+    detectDuplicateNamespaces(primaryLanguageTranslations);
     // Generate primary language file
     console.log(`Generating primary language file (${finalPrimaryLanguage})...`);
-    (0, generatePrimaryLanguageFile_1.default)({
+    generatePrimaryLanguageFile({
         output: finalOutput,
         primaryLanguageTranslations,
         fileExtension: finalExtension,
@@ -56,7 +51,7 @@ commander_1.program
             process.exit(1);
         }
         console.log("Generating translations for target languages...");
-        await (0, generateTranslatedFiles_1.default)({
+        await generateTranslatedFiles({
             output: finalOutput,
             primaryLanguageTranslations,
             primaryLanguage: finalPrimaryLanguage,
@@ -66,4 +61,4 @@ commander_1.program
         });
     }
 });
-commander_1.program.parse(process.argv);
+program.parse(process.argv);
