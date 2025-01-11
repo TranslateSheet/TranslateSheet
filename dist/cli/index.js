@@ -59,6 +59,7 @@ commander_1.program
         await (0, generateTranslatedFiles_1.default)({
             output: finalOutput,
             primaryLanguageTranslations,
+            primaryLanguage: finalPrimaryLanguage,
             languages: finalLanguages,
             fileExtension: finalExtension,
             apiKey: finalApiKey,

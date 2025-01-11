@@ -13,9 +13,14 @@ const sanitizeLanguage_1 = __importDefault(require("../helpers/sanitizeLanguage"
 /**
  * Generate translated files for target languages.
  */
-const generateTranslatedFiles = async ({ output, primaryLanguageTranslations, languages, fileExtension, apiKey, }) => {
-    const imports = [];
-    const resources = [];
+const generateTranslatedFiles = async ({ output, primaryLanguageTranslations, primaryLanguage, languages, fileExtension, apiKey, }) => {
+    const sanitizedPrimaryLanguage = (0, sanitizeLanguage_1.default)(primaryLanguage);
+    const imports = [
+        `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`,
+    ];
+    const resources = [
+        `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`,
+    ];
     for (const lang of languages) {
         const sanitizedLanguage = (0, sanitizeLanguage_1.default)(lang);
         console.log(`Translating content to ${lang}...`);

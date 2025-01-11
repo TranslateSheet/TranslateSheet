@@ -13,14 +13,21 @@ import sanitizeLanguage from "../helpers/sanitizeLanguage";
 const generateTranslatedFiles = async ({
   output,
   primaryLanguageTranslations,
+  primaryLanguage,
   languages,
   fileExtension,
   apiKey,
-}: Omit<TranslateSheetConfig, "primaryLanguage"> & {
+}: TranslateSheetConfig & {
   primaryLanguageTranslations: Record<string, any>;
 }): Promise<void> => {
-  const imports: string[] = [];
-  const resources: string[] = [];
+  const sanitizedPrimaryLanguage = sanitizeLanguage(primaryLanguage);
+
+  const imports: string[] = [
+    `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`,
+  ];
+  const resources: string[] = [
+    `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`,
+  ];
 
   for (const lang of languages) {
     const sanitizedLanguage = sanitizeLanguage(lang);

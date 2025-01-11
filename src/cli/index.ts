@@ -90,6 +90,7 @@ program
       await generateTranslatedFiles({
         output: finalOutput,
         primaryLanguageTranslations,
+        primaryLanguage: finalPrimaryLanguage,
         languages: finalLanguages,
         fileExtension: finalExtension,
         apiKey: finalApiKey,

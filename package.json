@@ -1,9 +1,9 @@
 {
   "name": "translate-sheet",
-  "version": "0.2.21",
+  "version": "0.2.23",
   "description": "translations made easy",
   "main": "dist/index.js",
-  "module": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -35,5 +35,11 @@
   },
   "bin": {
     "translate-sheet": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
   }
 }
