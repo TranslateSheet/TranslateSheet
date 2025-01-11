@@ -1,32 +1,29 @@
 {
   "name": "translate-sheet",
-  "version": "0.2.25",
+  "version": "0.2.29",
   "description": "translations made easy",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist",
     "prepublish": "npm version patch -m \"chore(release): %s\" && npm run build"
   },
-  "keywords": [
-    "translate",
-    "react",
-    "native",
-    "translate-sheet",
-    "translatesheet",
-    "sheet"
-  ],
-  "author": "Brandon Austin",
-  "license": "ISC",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "sideEffects": false,
   "peerDependencies": {
     "i18next": "^24.0.5"
   },
-  "repository": {
-    "type": "git",
-    "directory": "https://www.translatesheet.co/",
-    "url": "https://github.com/branaust/translatesheet.git"
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3"
   },
   "dependencies": {
     "@types/node": "^22.10.1",
@@ -35,12 +32,5 @@
   },
   "bin": {
     "translate-sheet": "./dist/cli/index.js"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
   }
 }

@@ -1,2 +1,2 @@
-export { default } from "./lib/TranslateSheet";
-export * from "./lib/TranslateSheet";
+export { default } from "./TranslateSheet";
+export * from "./TranslateSheet";
