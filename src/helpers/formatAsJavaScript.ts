@@ -1,3 +1,5 @@
+import sanitizeLanguage from "./sanitizeLanguage";
+
 /**
  * Generate a JavaScript object string with unquoted keys, except for keys with dashes, and add trailing commas.
  * Ensures that language codes with hyphens are converted to valid JavaScript variable names by replacing hyphens with underscores.
@@ -7,7 +9,7 @@ const formatAsJavaScript = (
   targetLanguage: string
 ): string => {
   // Replace hyphens with underscores for the variable name
-  const sanitizedLanguage = targetLanguage.replace(/-/g, "_");
+  const sanitizedLanguage = sanitizeLanguage(targetLanguage);
 
   const formatObject = (
     obj: Record<string, any>,

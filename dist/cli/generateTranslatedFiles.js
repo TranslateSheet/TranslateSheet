@@ -9,6 +9,7 @@ const path_1 = __importDefault(require("path"));
 const formatAsTypeScript_1 = __importDefault(require("../helpers/formatAsTypeScript"));
 const formatAsJavaScript_1 = __importDefault(require("../helpers/formatAsJavaScript"));
 const formatAsJSON_1 = __importDefault(require("../helpers/formatAsJSON"));
+const sanitizeLanguage_1 = __importDefault(require("../helpers/sanitizeLanguage"));
 /**
  * Generate translated files for target languages.
  */
@@ -16,6 +17,7 @@ const generateTranslatedFiles = async ({ output, primaryLanguageTranslations, la
     const imports = [];
     const resources = [];
     for (const lang of languages) {
+        const sanitizedLanguage = (0, sanitizeLanguage_1.default)(lang);
         console.log(`Translating content to ${lang}...`);
         try {
             const translatedContent = await (0, translateContent_1.default)({
@@ -42,8 +44,8 @@ const generateTranslatedFiles = async ({ output, primaryLanguageTranslations, la
             fs_1.default.writeFileSync(filePath, formattedContent, "utf-8");
             console.log(`Generated translation file: ${filePath}`);
             // Add to imports and resources for index.ts generation
-            imports.push(`import ${lang} from "./${lang}";`);
-            resources.push(`"${lang}": ${lang}`);
+            imports.push(`import ${sanitizedLanguage} from "./${lang}";`);
+            resources.push(`"${lang}": ${sanitizedLanguage}`);
         }
         catch (error) {
             console.error(`Failed to generate translation for ${lang}:`, error);
