@@ -5,10 +5,25 @@ const TranslateSheet = {
     namespace: string,
     translations: T
   ) {
+    let i18nInitialized = false;
+    let warnedAboutInitializationDelay = false;
 
-    //TODO: fs and path inside of loadConfig are holding back dynamic primary languages
+    // Listen for i18next initialization and set the flag
+    i18n.on("initialized", () => {
+      i18nInitialized = true;
+    });
+
+    // Warn if i18n is not initialized after a significant delay (500ms)
+    setTimeout(() => {
+      if (!i18nInitialized && !warnedAboutInitializationDelay) {
+        console.warn(
+          `[TranslateSheet] i18n not initialized after 500ms. Ensure that initI18n is called before using translations.`
+        );
+        warnedAboutInitializationDelay = true;
+      }
+    }, 500);
+
     const primaryLanguage = "en";
-
     const processedTranslations: Record<string, any> = {};
 
     Object.keys(translations).forEach((key) => {
@@ -23,50 +38,57 @@ const TranslateSheet = {
           options?: Record<string, any>,
           additionalOptions?: TOptions
         ) => {
-          if (i18n?.language?.includes(primaryLanguage)) {
-            // Directly replace placeholders for primary language
+          // DEV mode: Directly return local value for primary language
+          if (i18n.language.includes(primaryLanguage)) {
             return value.replace(
               /\{\{(.*?)\}\}/g,
               (_, p1) => options?.[p1] ?? `{{ ${p1} }}`
             );
           }
 
-          if (!i18n.isInitialized) {
-            console.warn(
-              `[TranslateSheet] i18n not initialized for key: ${namespace}:${key}`
-            );
-            return value; // Fallback to raw string
+          if (!i18nInitialized) {
+            return value; // Suppress warning during startup
           }
 
-          return i18n.t(`${namespace}:${key}`, {
+          const result = i18n.t(`${namespace}:${key}`, {
             ...options,
-            ...additionalOptions, // Pass additional options like format
-            defaultValue: value, // Fallback to the local value
+            ...additionalOptions,
+            defaultValue: value,
           });
+
+          // Log warning if translation is missing
+          if (result === key) {
+            console.warn(`[TranslateSheet] Missing translation for key: ${namespace}:${key}`);
+          }
+
+          return result;
         };
       } else if (typeof value === "string") {
         // Handle static strings with caching
         Object.defineProperty(processedTranslations, key, {
           get: () => {
-            if (i18n?.language?.includes(primaryLanguage)) {
-              return value; // Directly return local value for primary language
+            // DEV mode: Directly return local value for primary language
+            if (i18n.language.includes(primaryLanguage)) {
+              return value;
             }
 
             if (cachedValue !== null) {
-              return cachedValue; // Return cached value if available
+              return cachedValue;
             }
 
-            if (!i18n.isInitialized) {
-              // Suppress warning if local value can be returned
-              console.warn(
-                `[TranslateSheet] i18n not initialized for key: ${namespace}:${key}`
-              );
-              return value; // Fallback to raw string without caching
+            if (!i18nInitialized) {
+              return value; // Suppress warning during startup
             }
 
             cachedValue = i18n.t(`${namespace}:${key}`, {
               defaultValue: value,
             });
+
+            // Log warning if translation is missing
+            if (cachedValue === key) {
+              console.warn(`[TranslateSheet] Missing translation for key: ${namespace}:${key}`);
+            }
+
             return cachedValue;
           },
         });
