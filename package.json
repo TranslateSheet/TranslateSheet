@@ -1,7 +1,8 @@
 {
   "name": "translate-sheet",
-  "version": "0.2.29",
+  "version": "0.2.30",
   "description": "translations made easy",
+  "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
