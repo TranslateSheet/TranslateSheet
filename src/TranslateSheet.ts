@@ -39,7 +39,7 @@ const TranslateSheet = {
           additionalOptions?: TOptions
         ) => {
           // DEV mode: Directly return local value for primary language
-          if (i18n.language.includes(primaryLanguage)) {
+          if (i18n?.language?.includes(primaryLanguage)) {
             return value.replace(
               /\{\{(.*?)\}\}/g,
               (_, p1) => options?.[p1] ?? `{{ ${p1} }}`
@@ -68,7 +68,7 @@ const TranslateSheet = {
         Object.defineProperty(processedTranslations, key, {
           get: () => {
             // DEV mode: Directly return local value for primary language
-            if (i18n.language.includes(primaryLanguage)) {
+            if (i18n?.language?.includes(primaryLanguage)) {
               return value;
             }
 
