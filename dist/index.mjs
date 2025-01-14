@@ -92,14 +92,15 @@ var TranslateSheet = {
       const value = translations[key];
       if (typeof value === "string" && value.includes("{{")) {
         processedTranslations[key] = (options, additionalOptions) => {
+          var _a, _b;
           useLanguageChange_default();
           if (options) validateInterpolatedKeys_default(value, options);
-          if (i18n.language.includes(primaryLanguage)) {
+          if ((_b = (_a = i18n) == null ? void 0 : _a.language) == null ? void 0 : _b.includes(primaryLanguage)) {
             return value.replace(
               /\{\{(.*?)\}\}/g,
               (_, p1) => {
-                var _a;
-                return (_a = options == null ? void 0 : options[p1]) != null ? _a : `{{ ${p1} }}`;
+                var _a2;
+                return (_a2 = options == null ? void 0 : options[p1]) != null ? _a2 : `{{ ${p1} }}`;
               }
             );
           }
@@ -113,8 +114,9 @@ var TranslateSheet = {
       } else if (typeof value === "string") {
         Object.defineProperty(processedTranslations, key, {
           get: () => {
+            var _a, _b;
             useLanguageChange_default();
-            if (i18n.language.includes(primaryLanguage)) {
+            if ((_b = (_a = i18n) == null ? void 0 : _a.language) == null ? void 0 : _b.includes(primaryLanguage)) {
               return value;
             }
             if (cachedValues.has(key)) {

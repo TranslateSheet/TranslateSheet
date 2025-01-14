@@ -41,7 +41,7 @@ const TranslateSheet = {
           useLanguageChange();
           if (options) validateInterpolatedKeys(value, options);
 
-          if (i18n.language.includes(primaryLanguage)) {
+          if (i18n?.language?.includes(primaryLanguage)) {
             return value.replace(
               /\{\{(.*?)\}\}/g,
               (_, p1) => options?.[p1] ?? `{{ ${p1} }}`
@@ -63,7 +63,7 @@ const TranslateSheet = {
           get: () => {
             useLanguageChange();
 
-            if (i18n.language.includes(primaryLanguage)) {
+            if (i18n?.language?.includes(primaryLanguage)) {
               return value;
             }
 
