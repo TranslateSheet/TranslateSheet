@@ -18,71 +18,90 @@ var __spreadValues = (a, b) => {
 };
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
-// src/TranslateSheet.ts
+// src/lib/TranslateSheet.ts
 import i18n from "i18next";
+
+// src/lib/languageChangeEmitter.ts
+var languageChangeEmitter = {
+  listeners: /* @__PURE__ */ new Set(),
+  emit() {
+    this.listeners.forEach((listener) => listener());
+  },
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+      return void 0;
+    };
+  }
+};
+var languageChangeEmitter_default = languageChangeEmitter;
+
+// src/lib/hooks/useLanguageChange.ts
+import { useState, useEffect } from "react";
+var useLanguageChange = () => {
+  const [, setLangChange] = useState(0);
+  useEffect(() => {
+    return languageChangeEmitter_default.subscribe(() => {
+      setLangChange((prev) => prev + 1);
+    });
+  }, []);
+};
+var useLanguageChange_default = useLanguageChange;
+
+// src/lib/TranslateSheet.ts
 var TranslateSheet = {
   create(namespace, translations) {
     let i18nInitialized = false;
-    let warnedAboutInitializationDelay = false;
     i18n.on("initialized", () => {
       i18nInitialized = true;
     });
-    setTimeout(() => {
-      if (!i18nInitialized && !warnedAboutInitializationDelay) {
-        console.warn(
-          `[TranslateSheet] i18n not initialized after 500ms. Ensure that initI18n is called before using translations.`
-        );
-        warnedAboutInitializationDelay = true;
-      }
-    }, 500);
+    i18n.on("languageChanged", () => {
+      cachedValues.clear();
+      languageChangeEmitter_default.emit();
+    });
     const primaryLanguage = "en";
     const processedTranslations = {};
+    const cachedValues = /* @__PURE__ */ new Map();
     Object.keys(translations).forEach((key) => {
       const value = translations[key];
-      let cachedValue = null;
       if (typeof value === "string" && value.includes("{{")) {
         processedTranslations[key] = (options, additionalOptions) => {
-          var _a, _b;
-          if ((_b = (_a = i18n) == null ? void 0 : _a.language) == null ? void 0 : _b.includes(primaryLanguage)) {
+          useLanguageChange_default();
+          if (i18n.language.includes(primaryLanguage)) {
             return value.replace(
               /\{\{(.*?)\}\}/g,
               (_, p1) => {
-                var _a2;
-                return (_a2 = options == null ? void 0 : options[p1]) != null ? _a2 : `{{ ${p1} }}`;
+                var _a;
+                return (_a = options == null ? void 0 : options[p1]) != null ? _a : `{{ ${p1} }}`;
               }
             );
           }
           if (!i18nInitialized) {
             return value;
           }
-          const result = i18n.t(`${namespace}:${key}`, __spreadProps(__spreadValues(__spreadValues({}, options), additionalOptions), {
+          return i18n.t(`${namespace}:${key}`, __spreadProps(__spreadValues(__spreadValues({}, options), additionalOptions), {
             defaultValue: value
           }));
-          if (result === key) {
-            console.warn(`[TranslateSheet] Missing translation for key: ${namespace}:${key}`);
-          }
-          return result;
         };
       } else if (typeof value === "string") {
         Object.defineProperty(processedTranslations, key, {
           get: () => {
-            var _a, _b;
-            if ((_b = (_a = i18n) == null ? void 0 : _a.language) == null ? void 0 : _b.includes(primaryLanguage)) {
+            useLanguageChange_default();
+            if (i18n.language.includes(primaryLanguage)) {
               return value;
             }
-            if (cachedValue !== null) {
-              return cachedValue;
+            if (cachedValues.has(key)) {
+              return cachedValues.get(key);
             }
             if (!i18nInitialized) {
               return value;
             }
-            cachedValue = i18n.t(`${namespace}:${key}`, {
+            const translatedValue = i18n.t(`${namespace}:${key}`, {
               defaultValue: value
             });
-            if (cachedValue === key) {
-              console.warn(`[TranslateSheet] Missing translation for key: ${namespace}:${key}`);
-            }
-            return cachedValue;
+            cachedValues.set(key, translatedValue);
+            return translatedValue;
           }
         });
       } else {
