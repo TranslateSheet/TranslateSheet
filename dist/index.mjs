@@ -21,6 +21,9 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 // src/lib/TranslateSheet.ts
 import i18n from "i18next";
 
+// src/lib/hooks/useLanguageChange.ts
+import { useState, useEffect } from "react";
+
 // src/lib/languageChangeEmitter.ts
 var languageChangeEmitter = {
   listeners: /* @__PURE__ */ new Set(),
@@ -38,7 +41,6 @@ var languageChangeEmitter = {
 var languageChangeEmitter_default = languageChangeEmitter;
 
 // src/lib/hooks/useLanguageChange.ts
-import { useState, useEffect } from "react";
 var useLanguageChange = () => {
   const [, setLangChange] = useState(0);
   useEffect(() => {
@@ -48,6 +50,29 @@ var useLanguageChange = () => {
   }, []);
 };
 var useLanguageChange_default = useLanguageChange;
+
+// src/lib/utils/extractInterpolationKeys.ts
+var extractInterpolationKeys = (str) => {
+  const matches = str.match(/\{\{(.*?)\}\}/g) || [];
+  return matches.map((m) => m.slice(2, -2).trim());
+};
+var extractInterpolationKeys_default = extractInterpolationKeys;
+
+// src/lib/utils/validateInterpolatedKeys.ts
+var validateInterpolatedKeys = (template, options) => {
+  const requiredKeys = extractInterpolationKeys_default(template);
+  const providedKeys = Object.keys(options);
+  const invalidKeys = providedKeys.filter((key) => !requiredKeys.includes(key));
+  const missingKeys = requiredKeys.filter((key) => !providedKeys.includes(key));
+  if (invalidKeys.length > 0 || missingKeys.length > 0) {
+    console.warn(
+      `[TranslateSheet] Invalid interpolation parameters.
+` + (invalidKeys.length ? `Unexpected keys: ${invalidKeys.join(", ")}
+` : "") + (missingKeys.length ? `Missing required keys: ${missingKeys.join(", ")}` : "")
+    );
+  }
+};
+var validateInterpolatedKeys_default = validateInterpolatedKeys;
 
 // src/lib/TranslateSheet.ts
 var TranslateSheet = {
@@ -68,6 +93,7 @@ var TranslateSheet = {
       if (typeof value === "string" && value.includes("{{")) {
         processedTranslations[key] = (options, additionalOptions) => {
           useLanguageChange_default();
+          if (options) validateInterpolatedKeys_default(value, options);
           if (i18n.language.includes(primaryLanguage)) {
             return value.replace(
               /\{\{(.*?)\}\}/g,

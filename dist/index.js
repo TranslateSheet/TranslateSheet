@@ -54,6 +54,9 @@ module.exports = __toCommonJS(index_exports);
 // src/lib/TranslateSheet.ts
 var import_i18next = __toESM(require("i18next"));
 
+// src/lib/hooks/useLanguageChange.ts
+var import_react = require("react");
+
 // src/lib/languageChangeEmitter.ts
 var languageChangeEmitter = {
   listeners: /* @__PURE__ */ new Set(),
@@ -71,7 +74,6 @@ var languageChangeEmitter = {
 var languageChangeEmitter_default = languageChangeEmitter;
 
 // src/lib/hooks/useLanguageChange.ts
-var import_react = require("react");
 var useLanguageChange = () => {
   const [, setLangChange] = (0, import_react.useState)(0);
   (0, import_react.useEffect)(() => {
@@ -81,6 +83,29 @@ var useLanguageChange = () => {
   }, []);
 };
 var useLanguageChange_default = useLanguageChange;
+
+// src/lib/utils/extractInterpolationKeys.ts
+var extractInterpolationKeys = (str) => {
+  const matches = str.match(/\{\{(.*?)\}\}/g) || [];
+  return matches.map((m) => m.slice(2, -2).trim());
+};
+var extractInterpolationKeys_default = extractInterpolationKeys;
+
+// src/lib/utils/validateInterpolatedKeys.ts
+var validateInterpolatedKeys = (template, options) => {
+  const requiredKeys = extractInterpolationKeys_default(template);
+  const providedKeys = Object.keys(options);
+  const invalidKeys = providedKeys.filter((key) => !requiredKeys.includes(key));
+  const missingKeys = requiredKeys.filter((key) => !providedKeys.includes(key));
+  if (invalidKeys.length > 0 || missingKeys.length > 0) {
+    console.warn(
+      `[TranslateSheet] Invalid interpolation parameters.
+` + (invalidKeys.length ? `Unexpected keys: ${invalidKeys.join(", ")}
+` : "") + (missingKeys.length ? `Missing required keys: ${missingKeys.join(", ")}` : "")
+    );
+  }
+};
+var validateInterpolatedKeys_default = validateInterpolatedKeys;
 
 // src/lib/TranslateSheet.ts
 var TranslateSheet = {
@@ -101,6 +126,7 @@ var TranslateSheet = {
       if (typeof value === "string" && value.includes("{{")) {
         processedTranslations[key] = (options, additionalOptions) => {
           useLanguageChange_default();
+          if (options) validateInterpolatedKeys_default(value, options);
           if (import_i18next.default.language.includes(primaryLanguage)) {
             return value.replace(
               /\{\{(.*?)\}\}/g,

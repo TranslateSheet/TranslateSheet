@@ -1,12 +1,20 @@
 import i18n, { TOptions } from "i18next";
-import languageChangeEmitter from "../lib/languageChangeEmitter";
 import useLanguageChange from "../lib/hooks/useLanguageChange"
+import languageChangeEmitter from "./languageChangeEmitter";
+import validateInterpolatedKeys from "../lib/utils/validateInterpolatedKeys"
 
 const TranslateSheet = {
   create<T extends Record<string, string | ((...args: any[]) => string)>>(
     namespace: string,
     translations: T
-  ) {
+  ): {
+    [K in keyof T]: T[K] extends (...args: any[]) => any
+      ? T[K]
+      : string & ((
+          options?: Record<string, any>,
+          additionalOptions?: TOptions
+        ) => string);
+  } {
     let i18nInitialized = false;
 
     i18n.on("initialized", () => {
@@ -22,7 +30,6 @@ const TranslateSheet = {
     const processedTranslations: Record<string, any> = {};
     const cachedValues = new Map<string, string>();
 
-    // Rest of your existing translation processing logic...
     Object.keys(translations).forEach((key) => {
       const value = translations[key];
 
@@ -31,7 +38,8 @@ const TranslateSheet = {
           options?: Record<string, any>,
           additionalOptions?: TOptions
         ) => {
-          useLanguageChange(); // Add hook call here
+          useLanguageChange();
+          if (options) validateInterpolatedKeys(value, options);
 
           if (i18n.language.includes(primaryLanguage)) {
             return value.replace(
@@ -53,7 +61,7 @@ const TranslateSheet = {
       } else if (typeof value === "string") {
         Object.defineProperty(processedTranslations, key, {
           get: () => {
-            useLanguageChange(); // Add hook call here
+            useLanguageChange();
 
             if (i18n.language.includes(primaryLanguage)) {
               return value;
