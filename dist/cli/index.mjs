@@ -213,7 +213,7 @@ var init_translateContent = __esm({
       try {
         console.log("Sending translation request...");
         const response = yield fetch(
-          "https://api.translatesheet.co/api/translations",
+          "https://api.translatesheet.co/translateContent",
           {
             method: "POST",
             headers: {
