@@ -177,7 +177,7 @@ var translateContent = (_0) => __async(void 0, [_0], function* ({
   try {
     console.log("Sending translation request...");
     const response = yield fetch(
-      "https://api.translatesheet.co/api/translations",
+      "https://api.translatesheet.co/translateContent",
       {
         method: "POST",
         headers: {
