@@ -168,8 +168,8 @@ var generatePrimaryLanguageFile = ({
 };
 var generatePrimaryLanguageFile_default = generatePrimaryLanguageFile;
 
-// src/cli/translateContent.ts
-var translateContent = (_0) => __async(void 0, [_0], function* ({
+// src/cli/sendTranslationRequest.ts
+var sendTranslationRequest = (_0) => __async(void 0, [_0], function* ({
   content: content2,
   targetLanguage,
   apiKey
@@ -219,9 +219,9 @@ var translateContent = (_0) => __async(void 0, [_0], function* ({
     throw error;
   }
 });
-var translateContent_default = translateContent;
+var sendTranslationRequest_default = sendTranslationRequest;
 
-// src/cli/generateTranslatedFiles.ts
+// src/cli/requestTranslations.ts
 var import_fs4 = __toESM(require("fs"));
 var import_path4 = __toESM(require("path"));
 
@@ -245,8 +245,8 @@ var formatTranslatedContent = ({
 };
 var formatTranslatedContent_default = formatTranslatedContent;
 
-// src/cli/generateTranslatedFiles.ts
-var generateTranslatedFiles = (_0) => __async(void 0, [_0], function* ({
+// src/cli/requestTranslations.ts
+var requestTranslations = (_0) => __async(void 0, [_0], function* ({
   output,
   primaryLanguageTranslations,
   primaryLanguage,
@@ -263,9 +263,9 @@ var generateTranslatedFiles = (_0) => __async(void 0, [_0], function* ({
   ];
   for (const lang of languages) {
     const sanitizedLanguage = sanitizeLanguage_default(lang);
-    console.log(`Translating content to ${lang}...`);
+    console.log(`\u{1F30D} Translating content to ${lang}...`);
     try {
-      const translatedContent = yield translateContent_default({
+      const translatedContent = yield sendTranslationRequest_default({
         content: primaryLanguageTranslations,
         targetLanguage: lang,
         apiKey
@@ -277,11 +277,14 @@ var generateTranslatedFiles = (_0) => __async(void 0, [_0], function* ({
       });
       const filePath2 = import_path4.default.join(output, `${lang}${fileExtension}`);
       import_fs4.default.writeFileSync(filePath2, formattedContent, "utf-8");
-      console.log(`Generated translation file: ${filePath2}`);
+      console.log(`\u2705 Generated translation file: ${filePath2}`);
       imports.push(`import ${sanitizedLanguage} from "./${lang}";`);
       resources.push(`"${lang}": ${sanitizedLanguage}`);
     } catch (error) {
-      console.error(`Failed to generate translation for ${lang}:`, error);
+      console.error(
+        `\u274C Failed to generate translation for ${lang}:`,
+        error
+      );
     }
   }
   const indexContent = `
@@ -296,10 +299,10 @@ export default resources;
   const indexFilePath = import_path4.default.join(output, `resources${fileExtension}`);
   import_fs4.default.writeFileSync(indexFilePath, indexContent, "utf-8");
   console.log(
-    `Generated resources${fileExtension} file with all translations: ${indexFilePath}`
+    `\u{1F4E6} Generated resources${fileExtension} file with all translations: ${indexFilePath}`
   );
 });
-var generateTranslatedFiles_default = generateTranslatedFiles;
+var requestTranslations_default = requestTranslations;
 
 // src/helpers/detectDuplicateNamespaces.ts
 var detectDuplicateNamespaces = (translations2) => {
@@ -372,7 +375,7 @@ import_commander.program.command("generate").option("--output <output>", "Output
       process.exit(1);
     }
     console.log("Generating translations for target languages...");
-    yield generateTranslatedFiles_default({
+    yield requestTranslations_default({
       output: finalOutput,
       primaryLanguageTranslations,
       primaryLanguage: finalPrimaryLanguage,

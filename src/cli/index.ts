@@ -4,7 +4,7 @@ import { program } from "commander";
 import loadConfig from "./loadConfig";
 import extractTranslations from "./extractTranslations";
 import generatePrimaryLanguageFile from "./generatePrimaryLanguageFile";
-import generateTranslatedFiles from "./generateTranslatedFiles";
+import requestTranslations from "./requestTranslations";
 import detectDuplicateNamespaces from "../helpers/detectDuplicateNamespaces";
 import { TranslateSheetConfig } from "../types";
 
@@ -88,7 +88,7 @@ program
       }
 
       console.log("Generating translations for target languages...");
-      await generateTranslatedFiles({
+      await requestTranslations({
         output: finalOutput,
         primaryLanguageTranslations,
         primaryLanguage: finalPrimaryLanguage,

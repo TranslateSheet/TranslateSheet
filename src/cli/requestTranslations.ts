@@ -1,17 +1,14 @@
-import translateContent from "./translateContent";
+import sendTranslationRequest from "./sendTranslationRequest";
 import fs from "fs";
 import path from "path";
 import { TranslateSheetConfig } from "../types";
-import formatAsTypeScript from "../helpers/formatAsTypeScript";
-import formatAsJavaScript from "../helpers/formatAsJavaScript";
-import formatAsJSON from "../helpers/formatAsJSON";
 import sanitizeLanguage from "../helpers/sanitizeLanguage";
 import formatTranslatedContent from "./formatTranslatedContent";
 
 /**
- * Generate translated files for target languages.
+ * Request translated files for target languages from BE service
  */
-const generateTranslatedFiles = async ({
+const requestTranslations = async ({
   output,
   primaryLanguageTranslations,
   primaryLanguage,
@@ -32,9 +29,9 @@ const generateTranslatedFiles = async ({
 
   for (const lang of languages) {
     const sanitizedLanguage = sanitizeLanguage(lang);
-    console.log(`Translating content to ${lang}...`);
+    console.log(`🌍 Translating content to ${lang}...`);
     try {
-      const translatedContent = await translateContent({
+      const translatedContent = await sendTranslationRequest({
         content: primaryLanguageTranslations,
         targetLanguage: lang,
         apiKey,
@@ -49,13 +46,16 @@ const generateTranslatedFiles = async ({
       const filePath = path.join(output, `${lang}${fileExtension}`);
       // Write the formatted content to the appropriate file
       fs.writeFileSync(filePath, formattedContent, "utf-8");
-      console.log(`Generated translation file: ${filePath}`);
+      console.log(`✅ Generated translation file: ${filePath}`);
 
       // Add to imports and resources for index.ts generation
       imports.push(`import ${sanitizedLanguage} from "./${lang}";`);
       resources.push(`"${lang}": ${sanitizedLanguage}`);
     } catch (error) {
-      console.error(`Failed to generate translation for ${lang}:`, error);
+      console.error(
+        `❌ Failed to generate translation for ${lang}:`,
+        error
+      );
     }
   }
 
@@ -73,8 +73,8 @@ export default resources;
   const indexFilePath = path.join(output, `resources${fileExtension}`);
   fs.writeFileSync(indexFilePath, indexContent, "utf-8");
   console.log(
-    `Generated resources${fileExtension} file with all translations: ${indexFilePath}`
+    `📦 Generated resources${fileExtension} file with all translations: ${indexFilePath}`
   );
 };
 
-export default generateTranslatedFiles;
+export default requestTranslations;

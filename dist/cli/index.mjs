@@ -200,12 +200,12 @@ var init_generatePrimaryLanguageFile = __esm({
   }
 });
 
-// src/cli/translateContent.ts
-var translateContent, translateContent_default;
-var init_translateContent = __esm({
-  "src/cli/translateContent.ts"() {
+// src/cli/sendTranslationRequest.ts
+var sendTranslationRequest, sendTranslationRequest_default;
+var init_sendTranslationRequest = __esm({
+  "src/cli/sendTranslationRequest.ts"() {
     "use strict";
-    translateContent = (_0) => __async(void 0, [_0], function* ({
+    sendTranslationRequest = (_0) => __async(void 0, [_0], function* ({
       content: content2,
       targetLanguage,
       apiKey
@@ -255,7 +255,7 @@ var init_translateContent = __esm({
         throw error;
       }
     });
-    translateContent_default = translateContent;
+    sendTranslationRequest_default = sendTranslationRequest;
   }
 });
 
@@ -288,17 +288,17 @@ var init_formatTranslatedContent = __esm({
   }
 });
 
-// src/cli/generateTranslatedFiles.ts
+// src/cli/requestTranslations.ts
 import fs3 from "fs";
 import path4 from "path";
-var generateTranslatedFiles, generateTranslatedFiles_default;
-var init_generateTranslatedFiles = __esm({
-  "src/cli/generateTranslatedFiles.ts"() {
+var requestTranslations, requestTranslations_default;
+var init_requestTranslations = __esm({
+  "src/cli/requestTranslations.ts"() {
     "use strict";
-    init_translateContent();
+    init_sendTranslationRequest();
     init_sanitizeLanguage();
     init_formatTranslatedContent();
-    generateTranslatedFiles = (_0) => __async(void 0, [_0], function* ({
+    requestTranslations = (_0) => __async(void 0, [_0], function* ({
       output,
       primaryLanguageTranslations,
       primaryLanguage,
@@ -315,9 +315,9 @@ var init_generateTranslatedFiles = __esm({
       ];
       for (const lang of languages) {
         const sanitizedLanguage = sanitizeLanguage_default(lang);
-        console.log(`Translating content to ${lang}...`);
+        console.log(`\u{1F30D} Translating content to ${lang}...`);
         try {
-          const translatedContent = yield translateContent_default({
+          const translatedContent = yield sendTranslationRequest_default({
             content: primaryLanguageTranslations,
             targetLanguage: lang,
             apiKey
@@ -329,11 +329,14 @@ var init_generateTranslatedFiles = __esm({
           });
           const filePath2 = path4.join(output, `${lang}${fileExtension}`);
           fs3.writeFileSync(filePath2, formattedContent, "utf-8");
-          console.log(`Generated translation file: ${filePath2}`);
+          console.log(`\u2705 Generated translation file: ${filePath2}`);
           imports.push(`import ${sanitizedLanguage} from "./${lang}";`);
           resources.push(`"${lang}": ${sanitizedLanguage}`);
         } catch (error) {
-          console.error(`Failed to generate translation for ${lang}:`, error);
+          console.error(
+            `\u274C Failed to generate translation for ${lang}:`,
+            error
+          );
         }
       }
       const indexContent = `
@@ -348,10 +351,10 @@ export default resources;
       const indexFilePath = path4.join(output, `resources${fileExtension}`);
       fs3.writeFileSync(indexFilePath, indexContent, "utf-8");
       console.log(
-        `Generated resources${fileExtension} file with all translations: ${indexFilePath}`
+        `\u{1F4E6} Generated resources${fileExtension} file with all translations: ${indexFilePath}`
       );
     });
-    generateTranslatedFiles_default = generateTranslatedFiles;
+    requestTranslations_default = requestTranslations;
   }
 });
 
@@ -388,7 +391,7 @@ var require_cli = __commonJS({
     init_loadConfig();
     init_extractTranslations();
     init_generatePrimaryLanguageFile();
-    init_generateTranslatedFiles();
+    init_requestTranslations();
     init_detectDuplicateNamespaces();
     program.command("generate").option("--output <output>", "Output directory", void 0).option("--primaryLanguage <primaryLanguage>", "Primary language", void 0).option(
       "--languages <languages>",
@@ -440,7 +443,7 @@ var require_cli = __commonJS({
           process.exit(1);
         }
         console.log("Generating translations for target languages...");
-        yield generateTranslatedFiles_default({
+        yield requestTranslations_default({
           output: finalOutput,
           primaryLanguageTranslations,
           primaryLanguage: finalPrimaryLanguage,

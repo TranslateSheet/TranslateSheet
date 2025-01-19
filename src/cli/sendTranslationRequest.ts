@@ -1,7 +1,7 @@
 /**
- * Translate content using the TranslateSheet backend API.
+ * Send translation request to TranslateSheet API
  */
-const translateContent = async ({
+const sendTranslationRequest = async ({
   content,
   targetLanguage,
   apiKey,
@@ -62,4 +62,4 @@ const translateContent = async ({
   }
 };
 
-export default translateContent;
+export default sendTranslationRequest;
