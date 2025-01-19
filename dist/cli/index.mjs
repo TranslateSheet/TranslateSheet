@@ -194,7 +194,7 @@ var init_generatePrimaryLanguageFile = __esm({
       }
       const filePath2 = path3.join(output, `${primaryLanguage}${fileExtension}`);
       fs2.writeFileSync(filePath2, formattedContent, "utf-8");
-      console.log(`Generated primary language file: ${filePath2}`);
+      console.log(`Generated POO primary language file: ${filePath2}`);
     };
     generatePrimaryLanguageFile_default = generatePrimaryLanguageFile;
   }

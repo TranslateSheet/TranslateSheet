@@ -3,3 +3,5 @@ src/Test.tsx
 .env
 
 test/
+
+expo-example/

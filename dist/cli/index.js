@@ -164,7 +164,7 @@ var generatePrimaryLanguageFile = ({
   }
   const filePath2 = import_path3.default.join(output, `${primaryLanguage}${fileExtension}`);
   import_fs3.default.writeFileSync(filePath2, formattedContent, "utf-8");
-  console.log(`Generated primary language file: ${filePath2}`);
+  console.log(`Generated POO primary language file: ${filePath2}`);
 };
 var generatePrimaryLanguageFile_default = generatePrimaryLanguageFile;
 
