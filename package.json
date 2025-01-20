@@ -1,13 +1,13 @@
 {
   "name": "translate-sheet",
-  "version": "0.2.43",
+  "version": "0.2.45",
   "description": "translations made easy",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsup src/index.ts src/cli/index.ts --format cjs,esm --dts --out-dir dist --no-splitting",
+    "build": "tsup src/index.ts src/cli/index.ts --format cjs,esm --dts --out-dir dist --no-splitting && cd ./expo-example && bun install",
     "watch": "tsup src/index.ts src/cli/index.ts --format cjs,esm --dts --out-dir dist --no-splitting --watch",
     "prepublish": "npm version patch -m \"chore(release): %s\" && npm run build"
   },

@@ -75,27 +75,33 @@ var validateInterpolatedKeys = (template, options) => {
 var validateInterpolatedKeys_default = validateInterpolatedKeys;
 
 // src/lib/TranslateSheet.ts
+var globalI18nInitialized = false;
+i18n.on("initialized", () => {
+  globalI18nInitialized = true;
+});
 var TranslateSheet = {
   create(namespace, translations) {
-    let i18nInitialized = false;
-    i18n.on("initialized", () => {
-      i18nInitialized = true;
-    });
+    const primaryLanguage = "en";
+    const processedTranslations = {};
+    const cachedValues = /* @__PURE__ */ new Map();
     i18n.on("languageChanged", () => {
       cachedValues.clear();
       languageChangeEmitter_default.emit();
     });
-    const primaryLanguage = "en";
-    const processedTranslations = {};
-    const cachedValues = /* @__PURE__ */ new Map();
     Object.keys(translations).forEach((key) => {
       const value = translations[key];
       if (typeof value === "string" && value.includes("{{")) {
         processedTranslations[key] = (options, additionalOptions) => {
-          var _a, _b;
+          var _a, _b, _c;
           useLanguageChange_default();
-          if (options) validateInterpolatedKeys_default(value, options);
-          if ((_b = (_a = i18n) == null ? void 0 : _a.language) == null ? void 0 : _b.includes(primaryLanguage)) {
+          if (options) {
+            validateInterpolatedKeys_default(value, options);
+          } else {
+            console.warn(
+              `[TranslateSheet] Missing interpolated values for key: "${namespace}:${key}". Expected keys: ${((_a = value.match(/\{\{(.*?)\}\}/g)) == null ? void 0 : _a.map((k) => k.replace(/{{|}}/g, "")).join(", ")) || "none"}.`
+            );
+          }
+          if (!globalI18nInitialized || ((_c = (_b = i18n) == null ? void 0 : _b.language) == null ? void 0 : _c.includes(primaryLanguage))) {
             return value.replace(
               /\{\{(.*?)\}\}/g,
               (_, p1) => {
@@ -103,9 +109,6 @@ var TranslateSheet = {
                 return (_a2 = options == null ? void 0 : options[p1]) != null ? _a2 : `{{ ${p1} }}`;
               }
             );
-          }
-          if (!i18nInitialized) {
-            return value;
           }
           return i18n.t(`${namespace}:${key}`, __spreadProps(__spreadValues(__spreadValues({}, options), additionalOptions), {
             defaultValue: value
@@ -116,14 +119,11 @@ var TranslateSheet = {
           get: () => {
             var _a, _b;
             useLanguageChange_default();
-            if ((_b = (_a = i18n) == null ? void 0 : _a.language) == null ? void 0 : _b.includes(primaryLanguage)) {
+            if (!globalI18nInitialized || ((_b = (_a = i18n) == null ? void 0 : _a.language) == null ? void 0 : _b.includes(primaryLanguage))) {
               return value;
             }
             if (cachedValues.has(key)) {
               return cachedValues.get(key);
-            }
-            if (!i18nInitialized) {
-              return value;
             }
             const translatedValue = i18n.t(`${namespace}:${key}`, {
               defaultValue: value
