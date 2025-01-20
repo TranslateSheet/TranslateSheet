@@ -313,7 +313,8 @@ var init_requestTranslations = __esm({
       const resources = [
         `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`
       ];
-      for (const lang of languages) {
+      const uniqueLanguages = Array.from(new Set(languages));
+      for (const lang of uniqueLanguages) {
         const sanitizedLanguage = sanitizeLanguage_default(lang);
         console.log(`\u{1F30D} Translating content to ${lang}...`);
         try {
@@ -333,10 +334,7 @@ var init_requestTranslations = __esm({
           imports.push(`import ${sanitizedLanguage} from "./${lang}";`);
           resources.push(`"${lang}": ${sanitizedLanguage}`);
         } catch (error) {
-          console.error(
-            `\u274C Failed to generate translation for ${lang}:`,
-            error
-          );
+          console.error(`\u274C Failed to generate translation for ${lang}:`, error);
         }
       }
       const indexContent = `

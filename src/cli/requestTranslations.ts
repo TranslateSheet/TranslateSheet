@@ -27,7 +27,9 @@ const requestTranslations = async ({
     `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`,
   ];
 
-  for (const lang of languages) {
+  // Safeguard against duplicate languages
+  const uniqueLanguages = Array.from(new Set(languages));
+  for (const lang of uniqueLanguages) {
     const sanitizedLanguage = sanitizeLanguage(lang);
     console.log(`🌍 Translating content to ${lang}...`);
     try {
@@ -36,28 +38,24 @@ const requestTranslations = async ({
         targetLanguage: lang,
         apiKey,
       });
-
+  
       const formattedContent = formatTranslatedContent({
         fileExtension,
         translatedContent,
         lang,
       });
-
+  
       const filePath = path.join(output, `${lang}${fileExtension}`);
-      // Write the formatted content to the appropriate file
       fs.writeFileSync(filePath, formattedContent, "utf-8");
       console.log(`✅ Generated translation file: ${filePath}`);
-
-      // Add to imports and resources for index.ts generation
+  
       imports.push(`import ${sanitizedLanguage} from "./${lang}";`);
       resources.push(`"${lang}": ${sanitizedLanguage}`);
     } catch (error) {
-      console.error(
-        `❌ Failed to generate translation for ${lang}:`,
-        error
-      );
+      console.error(`❌ Failed to generate translation for ${lang}:`, error);
     }
   }
+  
 
   // Generate index.ts with dynamic imports and resource object
   const indexContent = `
