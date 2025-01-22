@@ -15,7 +15,6 @@ const requestTranslations = async ({
   languages,
   fileExtension,
   apiKey,
-  projectId,
 }: TranslateSheetConfig & {
   primaryLanguageTranslations: Record<string, any>;
 }): Promise<void> => {
@@ -38,7 +37,6 @@ const requestTranslations = async ({
         content: primaryLanguageTranslations,
         targetLanguage: lang,
         apiKey,
-        projectId
       });
   
       const formattedContent = formatTranslatedContent({

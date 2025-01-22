@@ -174,8 +174,7 @@ var generatePrimaryLanguageFile_default = generatePrimaryLanguageFile;
 var sendTranslationRequest = (_0) => __async(void 0, [_0], function* ({
   content: content2,
   targetLanguage,
-  apiKey,
-  projectId
+  apiKey
 }) {
   try {
     console.log("Sending translation request...");
@@ -189,8 +188,7 @@ var sendTranslationRequest = (_0) => __async(void 0, [_0], function* ({
         body: JSON.stringify({
           content: content2,
           targetLanguage,
-          apiKey,
-          projectId
+          apiKey
         })
       }
     );
@@ -254,8 +252,7 @@ var requestTranslations = (_0) => __async(void 0, [_0], function* ({
   primaryLanguage,
   languages,
   fileExtension,
-  apiKey,
-  projectId
+  apiKey
 }) {
   const sanitizedPrimaryLanguage = sanitizeLanguage_default(primaryLanguage);
   const imports = [
@@ -272,8 +269,7 @@ var requestTranslations = (_0) => __async(void 0, [_0], function* ({
       const translatedContent = yield sendTranslationRequest_default({
         content: primaryLanguageTranslations,
         targetLanguage: lang,
-        apiKey,
-        projectId
+        apiKey
       });
       const formattedContent = formatTranslatedContent_default({
         fileExtension,
@@ -331,11 +327,11 @@ import_commander.program.command("generate").option("--output <output>", "Output
   "--languages <languages>",
   "Comma-separated list of target languages",
   void 0
-).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option("--projectId <projectId>", "TranslateSheet Project Id", void 0).option(
+).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option(
   "--config <config>",
   "Path to configuration file",
   "./translateSheetConfig.js"
-).action((cmd) => __async(exports, null, function* () {
+).option("--projectId <projectId>", "TranslateSheet Project Id", void 0).action((cmd) => __async(exports, null, function* () {
   const {
     output,
     primaryLanguage,
@@ -388,8 +384,7 @@ import_commander.program.command("generate").option("--output <output>", "Output
       primaryLanguage: finalPrimaryLanguage,
       languages: finalLanguages,
       fileExtension: finalExtension,
-      apiKey: finalApiKey,
-      projectId: finalProjectId
+      apiKey: finalApiKey
     });
   }
 }));

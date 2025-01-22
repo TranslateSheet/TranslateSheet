@@ -210,8 +210,7 @@ var init_sendTranslationRequest = __esm({
     sendTranslationRequest = (_0) => __async(void 0, [_0], function* ({
       content: content2,
       targetLanguage,
-      apiKey,
-      projectId
+      apiKey
     }) {
       try {
         console.log("Sending translation request...");
@@ -225,8 +224,7 @@ var init_sendTranslationRequest = __esm({
             body: JSON.stringify({
               content: content2,
               targetLanguage,
-              apiKey,
-              projectId
+              apiKey
             })
           }
         );
@@ -306,8 +304,7 @@ var init_requestTranslations = __esm({
       primaryLanguage,
       languages,
       fileExtension,
-      apiKey,
-      projectId
+      apiKey
     }) {
       const sanitizedPrimaryLanguage = sanitizeLanguage_default(primaryLanguage);
       const imports = [
@@ -324,8 +321,7 @@ var init_requestTranslations = __esm({
           const translatedContent = yield sendTranslationRequest_default({
             content: primaryLanguageTranslations,
             targetLanguage: lang,
-            apiKey,
-            projectId
+            apiKey
           });
           const formattedContent = formatTranslatedContent_default({
             fileExtension,
@@ -399,11 +395,11 @@ var require_cli = __commonJS({
       "--languages <languages>",
       "Comma-separated list of target languages",
       void 0
-    ).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option("--projectId <projectId>", "TranslateSheet Project Id", void 0).option(
+    ).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option(
       "--config <config>",
       "Path to configuration file",
       "./translateSheetConfig.js"
-    ).action((cmd) => __async(exports, null, function* () {
+    ).option("--projectId <projectId>", "TranslateSheet Project Id", void 0).action((cmd) => __async(exports, null, function* () {
       const {
         output,
         primaryLanguage,
@@ -456,8 +452,7 @@ var require_cli = __commonJS({
           primaryLanguage: finalPrimaryLanguage,
           languages: finalLanguages,
           fileExtension: finalExtension,
-          apiKey: finalApiKey,
-          projectId: finalProjectId
+          apiKey: finalApiKey
         });
       }
     }));

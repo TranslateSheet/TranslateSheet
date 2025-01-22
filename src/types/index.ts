@@ -5,7 +5,8 @@ export interface TranslateSheetConfig {
   apiKey: string;
 
   /** The id used to associate the project */
-  projectId: string;
+  // TODO: available but not currently using
+  projectId?: string;
 
   /** The primary language of the project (e.g., "en" for English) */
   primaryLanguage: string;

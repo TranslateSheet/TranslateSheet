@@ -22,12 +22,14 @@ program
   )
   .option("--fileExtension <fileExtension>", "File extension", undefined)
   .option("--apiKey <apiKey>", "TranslateSheet API key", undefined)
-  .option("--projectId <projectId>", "TranslateSheet Project Id", undefined)
+
   .option(
     "--config <config>",
     "Path to configuration file",
     "./translateSheetConfig.js"
   )
+  // TODO: available but not currently using
+  .option("--projectId <projectId>", "TranslateSheet Project Id", undefined)
   .action(async (cmd) => {
     const {
       output,
@@ -100,7 +102,6 @@ program
         languages: finalLanguages,
         fileExtension: finalExtension,
         apiKey: finalApiKey,
-        projectId: finalProjectId,
       });
     }
   });
