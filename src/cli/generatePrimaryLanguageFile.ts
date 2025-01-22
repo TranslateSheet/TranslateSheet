@@ -14,7 +14,9 @@ const generatePrimaryLanguageFile = ({
   fileExtension,
   primaryLanguage,
   primaryLanguageTranslations,
-}: Omit<TranslateSheetConfig, "apiKey" | "languages"> & {
+  // TODO: when we hook up the DB we will need these values to send the
+  // primary language file
+}: Omit<TranslateSheetConfig, "apiKey" | "languages" | "projectId"> & {
   primaryLanguageTranslations: Record<string, any>;
 }) => {
   let formattedContent: string;

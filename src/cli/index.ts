@@ -21,7 +21,8 @@ program
     undefined
   )
   .option("--fileExtension <fileExtension>", "File extension", undefined)
-  .option("--apiKey <apiKey>", "OpenAI API key", undefined)
+  .option("--apiKey <apiKey>", "TranslateSheet API key", undefined)
+  .option("--projectId <projectId>", "TranslateSheet Project Id", undefined)
   .option(
     "--config <config>",
     "Path to configuration file",
@@ -33,6 +34,7 @@ program
       primaryLanguage,
       languages,
       apiKey,
+      projectId,
       fileExtension,
       config: configPath,
     } = cmd;
@@ -50,6 +52,7 @@ program
         [],
       fileExtension: fileExtension || config.fileExtension || ".ts",
       apiKey: apiKey || config.apiKey,
+      projectId: projectId || config.projectId,
     };
 
     const {
@@ -58,7 +61,8 @@ program
       languages: finalLanguages,
       fileExtension: finalExtension,
       apiKey: finalApiKey,
-    } = mergedConfig;
+      projectId: finalProjectId,
+    }: TranslateSheetConfig = mergedConfig;
 
     // Extract translations
     console.log("Extracting translations...");
@@ -68,14 +72,15 @@ program
     detectDuplicateNamespaces(primaryLanguageTranslations);
 
     // Generate primary language file
-    console.log(`Generating primary language file (${finalPrimaryLanguage})...`);
+    console.log(
+      `Generating primary language file (${finalPrimaryLanguage})...`
+    );
 
-    
     generatePrimaryLanguageFile({
       output: finalOutput,
       primaryLanguageTranslations,
       fileExtension: finalExtension,
-      primaryLanguage: finalPrimaryLanguage
+      primaryLanguage: finalPrimaryLanguage,
     });
 
     // Generate translations for target languages
@@ -95,6 +100,7 @@ program
         languages: finalLanguages,
         fileExtension: finalExtension,
         apiKey: finalApiKey,
+        projectId: projectId,
       });
     }
   });

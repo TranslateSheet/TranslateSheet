@@ -5,16 +5,18 @@ const sendTranslationRequest = async ({
   content,
   targetLanguage,
   apiKey,
+  projectId,
 }: {
   content: Record<string, any>;
   targetLanguage: string;
   apiKey: string;
+  projectId: string;
 }): Promise<Record<string, any>> => {
   try {
     console.log("Sending translation request...");
 
     const response = await fetch(
-      "https://api.translatesheet.co/translate-content",
+      "https://api.translatesheet.co/translations/translate-content",
       {
         method: "POST",
         headers: {
@@ -24,6 +26,7 @@ const sendTranslationRequest = async ({
           content,
           targetLanguage,
           apiKey,
+          projectId,
         }),
       }
     );
