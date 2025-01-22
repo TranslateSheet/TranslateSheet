@@ -100,7 +100,7 @@ program
         languages: finalLanguages,
         fileExtension: finalExtension,
         apiKey: finalApiKey,
-        projectId: projectId,
+        projectId: finalProjectId,
       });
     }
   });

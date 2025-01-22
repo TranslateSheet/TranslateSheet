@@ -181,6 +181,8 @@ var init_generatePrimaryLanguageFile = __esm({
       fileExtension,
       primaryLanguage,
       primaryLanguageTranslations
+      // TODO: when we hook up the DB we will need these values to send the
+      // primary language file
     }) => {
       let formattedContent;
       if (fileExtension === ".ts") {
@@ -208,12 +210,13 @@ var init_sendTranslationRequest = __esm({
     sendTranslationRequest = (_0) => __async(void 0, [_0], function* ({
       content: content2,
       targetLanguage,
-      apiKey
+      apiKey,
+      projectId
     }) {
       try {
         console.log("Sending translation request...");
         const response = yield fetch(
-          "https://api.translatesheet.co/translate-content",
+          "https://api.translatesheet.co/translations/translate-content",
           {
             method: "POST",
             headers: {
@@ -222,7 +225,8 @@ var init_sendTranslationRequest = __esm({
             body: JSON.stringify({
               content: content2,
               targetLanguage,
-              apiKey
+              apiKey,
+              projectId
             })
           }
         );
@@ -230,9 +234,7 @@ var init_sendTranslationRequest = __esm({
           const errorResponse = yield response.json();
           console.log(response.status);
           if (response.status === 403) {
-            throw new Error(
-              "API key is invalid or disabled. Please check your API key."
-            );
+            throw new Error(errorResponse.error);
           }
           if (response.status === 401) {
             throw new Error(
@@ -304,7 +306,8 @@ var init_requestTranslations = __esm({
       primaryLanguage,
       languages,
       fileExtension,
-      apiKey
+      apiKey,
+      projectId
     }) {
       const sanitizedPrimaryLanguage = sanitizeLanguage_default(primaryLanguage);
       const imports = [
@@ -321,7 +324,8 @@ var init_requestTranslations = __esm({
           const translatedContent = yield sendTranslationRequest_default({
             content: primaryLanguageTranslations,
             targetLanguage: lang,
-            apiKey
+            apiKey,
+            projectId
           });
           const formattedContent = formatTranslatedContent_default({
             fileExtension,
@@ -395,7 +399,7 @@ var require_cli = __commonJS({
       "--languages <languages>",
       "Comma-separated list of target languages",
       void 0
-    ).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "OpenAI API key", void 0).option(
+    ).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option("--projectId <projectId>", "TranslateSheet Project Id", void 0).option(
       "--config <config>",
       "Path to configuration file",
       "./translateSheetConfig.js"
@@ -405,6 +409,7 @@ var require_cli = __commonJS({
         primaryLanguage,
         languages,
         apiKey,
+        projectId,
         fileExtension,
         config: configPath
       } = cmd;
@@ -414,19 +419,23 @@ var require_cli = __commonJS({
         primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
         languages: (languages == null ? void 0 : languages.split(",").map((lang) => lang.trim())) || config.languages || [],
         fileExtension: fileExtension || config.fileExtension || ".ts",
-        apiKey: apiKey || config.apiKey
+        apiKey: apiKey || config.apiKey,
+        projectId: projectId || config.projectId
       };
       const {
         output: finalOutput,
         primaryLanguage: finalPrimaryLanguage,
         languages: finalLanguages,
         fileExtension: finalExtension,
-        apiKey: finalApiKey
+        apiKey: finalApiKey,
+        projectId: finalProjectId
       } = mergedConfig;
       console.log("Extracting translations...");
       const primaryLanguageTranslations = extractTranslations_default();
       detectDuplicateNamespaces_default(primaryLanguageTranslations);
-      console.log(`Generating primary language file (${finalPrimaryLanguage})...`);
+      console.log(
+        `Generating primary language file (${finalPrimaryLanguage})...`
+      );
       generatePrimaryLanguageFile_default({
         output: finalOutput,
         primaryLanguageTranslations,
@@ -447,7 +456,8 @@ var require_cli = __commonJS({
           primaryLanguage: finalPrimaryLanguage,
           languages: finalLanguages,
           fileExtension: finalExtension,
-          apiKey: finalApiKey
+          apiKey: finalApiKey,
+          projectId: finalProjectId
         });
       }
     }));

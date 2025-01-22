@@ -35,9 +35,10 @@ const sendTranslationRequest = async ({
       const errorResponse = await response.json();
       console.log(response.status);
       if (response.status === 403) {
-        throw new Error(
-          "API key is invalid or disabled. Please check your API key."
-        );
+        // throw new Error(
+        //   "API key is invalid or disabled. Please check your API key."
+        // );
+        throw new Error(errorResponse.error);
       }
       if (response.status === 401) {
         throw new Error(
