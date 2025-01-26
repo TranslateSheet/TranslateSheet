@@ -37,7 +37,7 @@ const generatePrimaryLanguageFile = ({
 
   // Write the formatted content to the file
   fs.writeFileSync(filePath, formattedContent, "utf-8");
-  console.log(`Generated POO primary language file: ${filePath}`);
+  console.log(`Generated primary language file: ${filePath}`);
 };
 
 export default generatePrimaryLanguageFile;
