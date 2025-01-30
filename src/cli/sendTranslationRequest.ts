@@ -14,7 +14,7 @@ const sendTranslationRequest = async ({
     console.log("Sending translation request...");
 
     const response = await fetch(
-      "https://api.translatesheet.co/translations/translate-content",
+      "https://api.translatesheet.co/translations/translate",
       {
         method: "POST",
         headers: {

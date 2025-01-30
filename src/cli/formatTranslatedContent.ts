@@ -6,18 +6,18 @@ import { FileExtensions } from "../types";
 const formatTranslatedContent = ({
   fileExtension,
   translatedContent,
-  lang,
+  targetLanguage,
 }: {
   fileExtension: FileExtensions;
   translatedContent: Record<string, any>;
-  lang: string;
+  targetLanguage: string;
 }) => {
   // Conditionally format the content based on file extension
   let formattedContent: string;
   if (fileExtension === ".js") {
-    formattedContent = formatAsJavaScript(translatedContent, lang);
+    formattedContent = formatAsJavaScript(translatedContent, targetLanguage);
   } else if (fileExtension === ".ts") {
-    formattedContent = formatAsTypeScript(translatedContent, lang);
+    formattedContent = formatAsTypeScript(translatedContent, targetLanguage);
   } else if (fileExtension === ".json") {
     formattedContent = formatAsJSON(translatedContent);
   } else {

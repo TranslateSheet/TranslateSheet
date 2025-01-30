@@ -4,19 +4,20 @@ import path from "path";
 import { TranslateSheetConfig } from "../types";
 import sanitizeLanguage from "../helpers/sanitizeLanguage";
 import formatTranslatedContent from "./formatTranslatedContent";
+import { uploadTranslationContent } from "./uploadTranslationContent";
 
 /**
  * Request translated files for target languages from BE service
  */
 const requestTranslations = async ({
   output,
-  primaryLanguageTranslations,
+  primaryLanguageContent,
   primaryLanguage,
   languages,
   fileExtension,
   apiKey,
 }: TranslateSheetConfig & {
-  primaryLanguageTranslations: Record<string, any>;
+  primaryLanguageContent: Record<string, any>;
 }): Promise<void> => {
   const sanitizedPrimaryLanguage = sanitizeLanguage(primaryLanguage);
 
@@ -29,33 +30,53 @@ const requestTranslations = async ({
 
   // Safeguard against duplicate languages
   const uniqueLanguages = Array.from(new Set(languages));
-  for (const lang of uniqueLanguages) {
-    const sanitizedLanguage = sanitizeLanguage(lang);
-    console.log(`🌍 Translating content to ${lang}...`);
+  for (const targetLanguage of uniqueLanguages) {
+    const sanitizedLanguage = sanitizeLanguage(targetLanguage);
+    console.log(`🌍 Translating content to ${targetLanguage}...`);
     try {
       const translatedContent = await sendTranslationRequest({
-        content: primaryLanguageTranslations,
-        targetLanguage: lang,
+        content: primaryLanguageContent,
+        targetLanguage,
         apiKey,
       });
-  
+
       const formattedContent = formatTranslatedContent({
         fileExtension,
         translatedContent,
-        lang,
+        targetLanguage,
       });
-  
-      const filePath = path.join(output, `${lang}${fileExtension}`);
+
+      const filePath = path.join(output, `${targetLanguage}${fileExtension}`);
       fs.writeFileSync(filePath, formattedContent, "utf-8");
       console.log(`✅ Generated translation file: ${filePath}`);
-  
-      imports.push(`import ${sanitizedLanguage} from "./${lang}";`);
-      resources.push(`"${lang}": ${sanitizedLanguage}`);
+
+      imports.push(`import ${sanitizedLanguage} from "./${targetLanguage}";`);
+      resources.push(`"${targetLanguage}": ${sanitizedLanguage}`);
+
+      // TODO: were sending this data back and forth twice to the backend. 
+      // TODO: i feel we should translate the content and upload it all in the same request
+      
+      try {
+        await uploadTranslationContent({
+          apiKey,
+          targetLanguage,
+          content: translatedContent,
+        });
+
+      } catch (err) {
+        console.error(
+          "❌ Failed to upload primary language translations to backend:",
+          err
+        );
+        process.exit(1);
+      }
     } catch (error) {
-      console.error(`❌ Failed to generate translation for ${lang}:`, error);
+      console.error(
+        `❌ Failed to generate translation for ${targetLanguage}:`,
+        error
+      );
     }
   }
-  
 
   // Generate index.ts with dynamic imports and resource object
   const indexContent = `

@@ -7,6 +7,7 @@ import generatePrimaryLanguageFile from "./generatePrimaryLanguageFile";
 import requestTranslations from "./requestTranslations";
 import detectDuplicateNamespaces from "../helpers/detectDuplicateNamespaces";
 import { TranslateSheetConfig } from "../types";
+import { uploadTranslationContent } from "./uploadTranslationContent";
 
 /**
  * Command-line interface setup with Commander.
@@ -36,7 +37,7 @@ program
       primaryLanguage,
       languages,
       apiKey,
-      projectId,
+      // projectId,
       fileExtension,
       config: configPath,
     } = cmd;
@@ -54,7 +55,6 @@ program
         [],
       fileExtension: fileExtension || config.fileExtension || ".ts",
       apiKey: apiKey || config.apiKey,
-      projectId: projectId || config.projectId,
     };
 
     const {
@@ -63,30 +63,39 @@ program
       languages: finalLanguages,
       fileExtension: finalExtension,
       apiKey: finalApiKey,
-      projectId: finalProjectId,
     }: TranslateSheetConfig = mergedConfig;
 
     // Extract translations
     console.log("Extracting translations...");
-    const primaryLanguageTranslations = extractTranslations();
+    const primaryLanguageContent = extractTranslations();
 
     // Detect and throw an error on duplicate namespaces
-    detectDuplicateNamespaces(primaryLanguageTranslations);
+    detectDuplicateNamespaces(primaryLanguageContent);
 
-    // Generate primary language file
-    console.log(
-      `Generating primary language file (${finalPrimaryLanguage})...`
-    );
+    try {
+      await uploadTranslationContent({
+        apiKey: finalApiKey,
+        targetLanguage: finalPrimaryLanguage,
+        content: primaryLanguageContent,
+      });
+    } catch (err) {
+      console.error(
+        "❌ Failed to upload primary language translations to backend:",
+        err
+      );
+      process.exit(1);
+    }
 
     generatePrimaryLanguageFile({
       output: finalOutput,
-      primaryLanguageTranslations,
+      primaryLanguageContent,
       fileExtension: finalExtension,
       primaryLanguage: finalPrimaryLanguage,
     });
 
     // Generate translations for target languages
     if (finalLanguages.length > 0) {
+      // TODO: move this apiKey check before we upload the primary language file
       if (!finalApiKey) {
         console.error(
           "API key is required. Provide it via config or CLI options."
@@ -97,7 +106,7 @@ program
       console.log("Generating translations for target languages...");
       await requestTranslations({
         output: finalOutput,
-        primaryLanguageTranslations,
+        primaryLanguageContent,
         primaryLanguage: finalPrimaryLanguage,
         languages: finalLanguages,
         fileExtension: finalExtension,

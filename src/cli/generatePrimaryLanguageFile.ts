@@ -13,21 +13,21 @@ const generatePrimaryLanguageFile = ({
   output,
   fileExtension,
   primaryLanguage,
-  primaryLanguageTranslations,
+  primaryLanguageContent,
   // TODO: when we hook up the DB we will need these values to send the
   // primary language file
 }: Omit<TranslateSheetConfig, "apiKey" | "languages" | "projectId"> & {
-  primaryLanguageTranslations: Record<string, any>;
+  primaryLanguageContent: Record<string, any>;
 }) => {
   let formattedContent: string;
 
   // Conditionally format the content based on file extension
   if (fileExtension === ".ts") {
-    formattedContent = formatAsTypeScript(primaryLanguageTranslations, primaryLanguage);
+    formattedContent = formatAsTypeScript(primaryLanguageContent, primaryLanguage);
   } else if (fileExtension === ".js") {
-    formattedContent = formatAsJavaScript(primaryLanguageTranslations, primaryLanguage);
+    formattedContent = formatAsJavaScript(primaryLanguageContent, primaryLanguage);
   } else if (fileExtension === ".json") {
-    formattedContent = formatAsJSON(primaryLanguageTranslations);
+    formattedContent = formatAsJSON(primaryLanguageContent);
   } else {
     throw new Error(`Unsupported file extension: ${fileExtension}`);
   }
