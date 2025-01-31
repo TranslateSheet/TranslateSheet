@@ -4,7 +4,6 @@ import path from "path";
 import { TranslateSheetConfig } from "../types";
 import sanitizeLanguage from "../helpers/sanitizeLanguage";
 import formatTranslatedContent from "./formatTranslatedContent";
-import { uploadTranslationContent } from "./uploadTranslationContent";
 
 /**
  * Request translated files for target languages from BE service
@@ -52,24 +51,6 @@ const requestTranslations = async ({
 
       imports.push(`import ${sanitizedLanguage} from "./${targetLanguage}";`);
       resources.push(`"${targetLanguage}": ${sanitizedLanguage}`);
-
-      // TODO: were sending this data back and forth twice to the backend. 
-      // TODO: i feel we should translate the content and upload it all in the same request
-      
-      try {
-        await uploadTranslationContent({
-          apiKey,
-          targetLanguage,
-          content: translatedContent,
-        });
-
-      } catch (err) {
-        console.error(
-          "❌ Failed to upload primary language translations to backend:",
-          err
-        );
-        process.exit(1);
-      }
     } catch (error) {
       console.error(
         `❌ Failed to generate translation for ${targetLanguage}:`,

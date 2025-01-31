@@ -13,7 +13,6 @@ export const uploadTranslationContent = async ({
   content: Record<string, any>;
 }): Promise<void> => {
   try {
-    // const content = JSON.stringify(primaryLanguageTranslations, null, 2);
 
     const response = await fetch(
       "https://api.translatesheet.co/translations/upload",

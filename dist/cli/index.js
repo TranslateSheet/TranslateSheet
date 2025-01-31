@@ -5442,6 +5442,86 @@ var formatTranslatedContent = ({
 };
 var formatTranslatedContent_default = formatTranslatedContent;
 
+// src/cli/requestTranslations.ts
+var requestTranslations = (_0) => __async(void 0, [_0], function* ({
+  output,
+  primaryLanguageContent,
+  primaryLanguage,
+  languages,
+  fileExtension,
+  apiKey
+}) {
+  const sanitizedPrimaryLanguage = sanitizeLanguage_default(primaryLanguage);
+  const imports = [
+    `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`
+  ];
+  const resources = [
+    `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`
+  ];
+  const uniqueLanguages = Array.from(new Set(languages));
+  for (const targetLanguage of uniqueLanguages) {
+    const sanitizedLanguage = sanitizeLanguage_default(targetLanguage);
+    console.log(`\u{1F30D} Translating content to ${targetLanguage}...`);
+    try {
+      const translatedContent = yield sendTranslationRequest_default({
+        content: primaryLanguageContent,
+        targetLanguage,
+        apiKey
+      });
+      const formattedContent = formatTranslatedContent_default({
+        fileExtension,
+        translatedContent,
+        targetLanguage
+      });
+      const filePath2 = import_path4.default.join(output, `${targetLanguage}${fileExtension}`);
+      import_fs4.default.writeFileSync(filePath2, formattedContent, "utf-8");
+      console.log(`\u2705 Generated translation file: ${filePath2}`);
+      imports.push(`import ${sanitizedLanguage} from "./${targetLanguage}";`);
+      resources.push(`"${targetLanguage}": ${sanitizedLanguage}`);
+    } catch (error) {
+      console.error(
+        `\u274C Failed to generate translation for ${targetLanguage}:`,
+        error
+      );
+    }
+  }
+  const indexContent = `
+${imports.join("\n")}
+
+const resources = {
+  ${resources.join(",\n  ")}
+};
+
+export default resources;
+`;
+  const indexFilePath = import_path4.default.join(output, `resources${fileExtension}`);
+  import_fs4.default.writeFileSync(indexFilePath, indexContent, "utf-8");
+  console.log(
+    `\u{1F4E6} Generated resources${fileExtension} file with all translations: ${indexFilePath}`
+  );
+});
+var requestTranslations_default = requestTranslations;
+
+// src/helpers/detectDuplicateNamespaces.ts
+var detectDuplicateNamespaces = (translations2) => {
+  const seenNamespaces = /* @__PURE__ */ new Set();
+  const duplicateNamespaces = [];
+  Object.keys(translations2).forEach((namespace2) => {
+    if (seenNamespaces.has(namespace2)) {
+      duplicateNamespaces.push(namespace2);
+    }
+    seenNamespaces.add(namespace2);
+  });
+  if (duplicateNamespaces.length > 0) {
+    const message = `[TranslateSheet] Duplicate namespaces detected: ${duplicateNamespaces.join(
+      ", "
+    )}. Please ensure each namespace is unique.`;
+    console.error(message);
+    process.exit(1);
+  }
+};
+var detectDuplicateNamespaces_default = detectDuplicateNamespaces;
+
 // ../../../node_modules/node-fetch/src/index.js
 var import_node_http2 = __toESM(require("http"), 1);
 var import_node_https = __toESM(require("https"), 1);
@@ -6786,99 +6866,6 @@ var uploadTranslationContent = (_0) => __async(void 0, [_0], function* ({
     throw err;
   }
 });
-
-// src/cli/requestTranslations.ts
-var requestTranslations = (_0) => __async(void 0, [_0], function* ({
-  output,
-  primaryLanguageContent,
-  primaryLanguage,
-  languages,
-  fileExtension,
-  apiKey
-}) {
-  const sanitizedPrimaryLanguage = sanitizeLanguage_default(primaryLanguage);
-  const imports = [
-    `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`
-  ];
-  const resources = [
-    `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`
-  ];
-  const uniqueLanguages = Array.from(new Set(languages));
-  for (const targetLanguage of uniqueLanguages) {
-    const sanitizedLanguage = sanitizeLanguage_default(targetLanguage);
-    console.log(`\u{1F30D} Translating content to ${targetLanguage}...`);
-    try {
-      const translatedContent = yield sendTranslationRequest_default({
-        content: primaryLanguageContent,
-        targetLanguage,
-        apiKey
-      });
-      const formattedContent = formatTranslatedContent_default({
-        fileExtension,
-        translatedContent,
-        targetLanguage
-      });
-      const filePath2 = import_path4.default.join(output, `${targetLanguage}${fileExtension}`);
-      import_fs4.default.writeFileSync(filePath2, formattedContent, "utf-8");
-      console.log(`\u2705 Generated translation file: ${filePath2}`);
-      imports.push(`import ${sanitizedLanguage} from "./${targetLanguage}";`);
-      resources.push(`"${targetLanguage}": ${sanitizedLanguage}`);
-      try {
-        yield uploadTranslationContent({
-          apiKey,
-          targetLanguage,
-          content: translatedContent
-        });
-      } catch (err) {
-        console.error(
-          "\u274C Failed to upload primary language translations to backend:",
-          err
-        );
-        process.exit(1);
-      }
-    } catch (error) {
-      console.error(
-        `\u274C Failed to generate translation for ${targetLanguage}:`,
-        error
-      );
-    }
-  }
-  const indexContent = `
-${imports.join("\n")}
-
-const resources = {
-  ${resources.join(",\n  ")}
-};
-
-export default resources;
-`;
-  const indexFilePath = import_path4.default.join(output, `resources${fileExtension}`);
-  import_fs4.default.writeFileSync(indexFilePath, indexContent, "utf-8");
-  console.log(
-    `\u{1F4E6} Generated resources${fileExtension} file with all translations: ${indexFilePath}`
-  );
-});
-var requestTranslations_default = requestTranslations;
-
-// src/helpers/detectDuplicateNamespaces.ts
-var detectDuplicateNamespaces = (translations2) => {
-  const seenNamespaces = /* @__PURE__ */ new Set();
-  const duplicateNamespaces = [];
-  Object.keys(translations2).forEach((namespace2) => {
-    if (seenNamespaces.has(namespace2)) {
-      duplicateNamespaces.push(namespace2);
-    }
-    seenNamespaces.add(namespace2);
-  });
-  if (duplicateNamespaces.length > 0) {
-    const message = `[TranslateSheet] Duplicate namespaces detected: ${duplicateNamespaces.join(
-      ", "
-    )}. Please ensure each namespace is unique.`;
-    console.error(message);
-    process.exit(1);
-  }
-};
-var detectDuplicateNamespaces_default = detectDuplicateNamespaces;
 
 // src/cli/index.ts
 import_commander.program.command("generate").option("--output <output>", "Output directory", void 0).option("--primaryLanguage <primaryLanguage>", "Primary language", void 0).option(
