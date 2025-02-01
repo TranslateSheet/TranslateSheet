@@ -6836,7 +6836,7 @@ var uploadTranslationContent = (_0) => __async(void 0, [_0], function* ({
 }) {
   try {
     const response = yield fetch2(
-      "https://api.translatesheet.co/translations/upload",
+      "https://api.translatesheet.co/translations/upload-primary-language",
       {
         method: "POST",
         headers: {

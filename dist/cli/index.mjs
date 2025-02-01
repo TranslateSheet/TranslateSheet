@@ -7010,7 +7010,7 @@ var init_uploadTranslationContent = __esm({
     }) {
       try {
         const response = yield fetch2(
-          "https://api.translatesheet.co/translations/upload",
+          "https://api.translatesheet.co/translations/upload-primary-language",
           {
             method: "POST",
             headers: {
