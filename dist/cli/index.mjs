@@ -127,403 +127,6 @@ var __yieldStar = (value) => {
 };
 var __forAwait = (obj, it, method) => (it = obj[__knownSymbol("asyncIterator")]) ? it.call(obj) : (obj = obj[__knownSymbol("iterator")](), it = {}, method = (key, fn) => (fn = obj[key]) && (it[key] = (arg) => new Promise((yes, no, done) => (arg = fn.call(obj, arg), done = arg.done, Promise.resolve(arg.value).then((value) => yes({ value, done }), no)))), method("next"), method("return"), it);
 
-// src/cli/loadConfig.ts
-import { existsSync } from "fs";
-import path from "path";
-var loadConfig, loadConfig_default;
-var init_loadConfig = __esm({
-  "src/cli/loadConfig.ts"() {
-    "use strict";
-    loadConfig = (configPath = "./translateSheetConfig.js") => {
-      if (existsSync(configPath)) {
-        try {
-          const config = __require(path.resolve(configPath));
-          return config;
-        } catch (error) {
-          console.error(`Failed to load config file at ${configPath}:`, error);
-          process.exit(1);
-        }
-      }
-      return {};
-    };
-    loadConfig_default = loadConfig;
-  }
-});
-
-// src/cli/extractTranslations.ts
-import * as glob from "glob";
-import fs from "fs";
-import path2 from "path";
-var extractTranslations, extractTranslations_default;
-var init_extractTranslations = __esm({
-  "src/cli/extractTranslations.ts"() {
-    "use strict";
-    extractTranslations = () => {
-      const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}");
-      const translations = {};
-      files.forEach((file) => {
-        const filePath = path2.resolve(file);
-        if (fs.statSync(filePath).isDirectory()) {
-          return;
-        }
-        const content = fs.readFileSync(filePath, "utf-8");
-        const regex = /TranslateSheet\.create\("([^"]+)",\s*({[\s\S]*?})\)/g;
-        let match;
-        while ((match = regex.exec(content)) !== null) {
-          const namespace = match[1];
-          const translationObject = eval(`(${match[2]})`);
-          if (!translations[namespace]) {
-            translations[namespace] = {};
-          }
-          Object.assign(translations[namespace], translationObject);
-        }
-      });
-      return translations;
-    };
-    extractTranslations_default = extractTranslations;
-  }
-});
-
-// src/helpers/formatAsJSON.ts
-var formatAsJSON, formatAsJSON_default;
-var init_formatAsJSON = __esm({
-  "src/helpers/formatAsJSON.ts"() {
-    "use strict";
-    formatAsJSON = (content2) => {
-      return JSON.stringify(content2, null, 2);
-    };
-    formatAsJSON_default = formatAsJSON;
-  }
-});
-
-// src/helpers/sanitizeLanguage.ts
-var sanitizeLanguage, sanitizeLanguage_default;
-var init_sanitizeLanguage = __esm({
-  "src/helpers/sanitizeLanguage.ts"() {
-    "use strict";
-    sanitizeLanguage = (lang) => lang.replace(/-/g, "_");
-    sanitizeLanguage_default = sanitizeLanguage;
-  }
-});
-
-// src/helpers/formatAsJavaScript.ts
-var formatAsJavaScript, formatAsJavaScript_default;
-var init_formatAsJavaScript = __esm({
-  "src/helpers/formatAsJavaScript.ts"() {
-    "use strict";
-    init_sanitizeLanguage();
-    formatAsJavaScript = (content2, targetLanguage) => {
-      const sanitizedLanguage = sanitizeLanguage_default(targetLanguage);
-      const formatObject = (obj, indent = 2) => {
-        return Object.entries(obj).map(([key, value]) => {
-          const formattedKey = key.includes("-") ? `"${key}"` : key;
-          const formattedValue = typeof value === "object" && !Array.isArray(value) ? `{
-${formatObject(value, indent + 2)}
-${" ".repeat(indent)}}` : JSON.stringify(value);
-          return `${" ".repeat(indent)}${formattedKey}: ${formattedValue},`;
-        }).join("\n");
-      };
-      const objectString = formatObject(content2);
-      return `const ${sanitizedLanguage} = {
-${objectString}
-};
-export default ${sanitizedLanguage};`;
-    };
-    formatAsJavaScript_default = formatAsJavaScript;
-  }
-});
-
-// src/helpers/formatAsTypeScript.ts
-var formatAsTypeScript, formatAsTypeScript_default;
-var init_formatAsTypeScript = __esm({
-  "src/helpers/formatAsTypeScript.ts"() {
-    "use strict";
-    init_sanitizeLanguage();
-    formatAsTypeScript = (content2, targetLanguage) => {
-      const sanitizedLanguage = sanitizeLanguage_default(targetLanguage);
-      const formatObject = (obj, indent = 2) => {
-        return Object.entries(obj).map(([key, value]) => {
-          const formattedKey = key.includes("-") ? `"${key}"` : key;
-          const formattedValue = typeof value === "object" && !Array.isArray(value) ? `{
-${formatObject(value, indent + 2)}
-${" ".repeat(indent)}}` : JSON.stringify(value);
-          return `${" ".repeat(indent)}${formattedKey}: ${formattedValue},`;
-        }).join("\n");
-      };
-      const objectString = formatObject(content2);
-      return `const ${sanitizedLanguage}: Record<string, any> = {
-${objectString}
-};
-export default ${sanitizedLanguage};`;
-    };
-    formatAsTypeScript_default = formatAsTypeScript;
-  }
-});
-
-// src/cli/generatePrimaryLanguageFile.ts
-import fs2 from "fs";
-import path3 from "path";
-var generatePrimaryLanguageFile, generatePrimaryLanguageFile_default;
-var init_generatePrimaryLanguageFile = __esm({
-  "src/cli/generatePrimaryLanguageFile.ts"() {
-    "use strict";
-    init_formatAsJSON();
-    init_formatAsJavaScript();
-    init_formatAsTypeScript();
-    generatePrimaryLanguageFile = ({
-      output,
-      fileExtension,
-      primaryLanguage,
-      primaryLanguageContent
-      // TODO: when we hook up the DB we will need these values to send the
-      // primary language file
-    }) => {
-      let formattedContent;
-      if (fileExtension === ".ts") {
-        formattedContent = formatAsTypeScript_default(primaryLanguageContent, primaryLanguage);
-      } else if (fileExtension === ".js") {
-        formattedContent = formatAsJavaScript_default(primaryLanguageContent, primaryLanguage);
-      } else if (fileExtension === ".json") {
-        formattedContent = formatAsJSON_default(primaryLanguageContent);
-      } else {
-        throw new Error(`Unsupported file extension: ${fileExtension}`);
-      }
-      const filePath2 = path3.join(output, `${primaryLanguage}${fileExtension}`);
-      fs2.writeFileSync(filePath2, formattedContent, "utf-8");
-      console.log(`Generated primary language file: ${filePath2}`);
-    };
-    generatePrimaryLanguageFile_default = generatePrimaryLanguageFile;
-  }
-});
-
-// src/cli/sendTranslationRequest.ts
-var sendTranslationRequest, sendTranslationRequest_default;
-var init_sendTranslationRequest = __esm({
-  "src/cli/sendTranslationRequest.ts"() {
-    "use strict";
-    sendTranslationRequest = (_0) => __async(void 0, [_0], function* ({
-      content: content2,
-      targetLanguage,
-      apiKey
-    }) {
-      try {
-        console.log("Sending translation request...");
-        const response = yield fetch(
-          "https://api.translatesheet.co/translations/translate",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              content: content2,
-              targetLanguage,
-              apiKey
-            })
-          }
-        );
-        if (!response.ok) {
-          const errorResponse = yield response.json();
-          console.log(response.status);
-          if (response.status === 403) {
-            throw new Error(errorResponse.error);
-          }
-          if (response.status === 401) {
-            throw new Error(
-              "Unauthorized. Ensure your API key has the correct permissions."
-            );
-          }
-          if (response.status === 400) {
-            throw new Error(
-              `Bad request: ${(errorResponse == null ? void 0 : errorResponse.error) || "Invalid request payload."}`
-            );
-          }
-          throw new Error(
-            `API Error: ${response.status} ${response.statusText} - ${(errorResponse == null ? void 0 : errorResponse.error) || "Unexpected error."}`
-          );
-        }
-        const data = yield response.json();
-        return data.translatedContent;
-      } catch (error) {
-        console.error("Error translating content via API:", error);
-        throw error;
-      }
-    });
-    sendTranslationRequest_default = sendTranslationRequest;
-  }
-});
-
-// src/cli/formatTranslatedContent.ts
-var formatTranslatedContent, formatTranslatedContent_default;
-var init_formatTranslatedContent = __esm({
-  "src/cli/formatTranslatedContent.ts"() {
-    "use strict";
-    init_formatAsJSON();
-    init_formatAsJavaScript();
-    init_formatAsTypeScript();
-    formatTranslatedContent = ({
-      fileExtension,
-      translatedContent,
-      targetLanguage
-    }) => {
-      let formattedContent;
-      if (fileExtension === ".js") {
-        formattedContent = formatAsJavaScript_default(translatedContent, targetLanguage);
-      } else if (fileExtension === ".ts") {
-        formattedContent = formatAsTypeScript_default(translatedContent, targetLanguage);
-      } else if (fileExtension === ".json") {
-        formattedContent = formatAsJSON_default(translatedContent);
-      } else {
-        throw new Error(`Unsupported file extension: ${fileExtension}`);
-      }
-      return formattedContent;
-    };
-    formatTranslatedContent_default = formatTranslatedContent;
-  }
-});
-
-// src/cli/requestTranslations.ts
-import fs3 from "fs";
-import path4 from "path";
-var requestTranslations, requestTranslations_default;
-var init_requestTranslations = __esm({
-  "src/cli/requestTranslations.ts"() {
-    "use strict";
-    init_sendTranslationRequest();
-    init_sanitizeLanguage();
-    init_formatTranslatedContent();
-    requestTranslations = (_0) => __async(void 0, [_0], function* ({
-      output,
-      primaryLanguageContent,
-      primaryLanguage,
-      languages,
-      fileExtension,
-      apiKey
-    }) {
-      const sanitizedPrimaryLanguage = sanitizeLanguage_default(primaryLanguage);
-      const imports = [
-        `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`
-      ];
-      const resources = [
-        `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`
-      ];
-      const uniqueLanguages = Array.from(new Set(languages));
-      for (const targetLanguage of uniqueLanguages) {
-        const sanitizedLanguage = sanitizeLanguage_default(targetLanguage);
-        console.log(`\u{1F30D} Translating content to ${targetLanguage}...`);
-        try {
-          const translatedContent = yield sendTranslationRequest_default({
-            content: primaryLanguageContent,
-            targetLanguage,
-            apiKey
-          });
-          const formattedContent = formatTranslatedContent_default({
-            fileExtension,
-            translatedContent,
-            targetLanguage
-          });
-          const filePath2 = path4.join(output, `${targetLanguage}${fileExtension}`);
-          fs3.writeFileSync(filePath2, formattedContent, "utf-8");
-          console.log(`\u2705 Generated translation file: ${filePath2}`);
-          imports.push(`import ${sanitizedLanguage} from "./${targetLanguage}";`);
-          resources.push(`"${targetLanguage}": ${sanitizedLanguage}`);
-        } catch (error) {
-          console.error(
-            `\u274C Failed to generate translation for ${targetLanguage}:`,
-            error
-          );
-        }
-      }
-      const indexContent = `
-${imports.join("\n")}
-
-const resources = {
-  ${resources.join(",\n  ")}
-};
-
-export default resources;
-`;
-      const indexFilePath = path4.join(output, `resources${fileExtension}`);
-      fs3.writeFileSync(indexFilePath, indexContent, "utf-8");
-      console.log(
-        `\u{1F4E6} Generated resources${fileExtension} file with all translations: ${indexFilePath}`
-      );
-    });
-    requestTranslations_default = requestTranslations;
-  }
-});
-
-// src/helpers/detectDuplicateNamespaces.ts
-var detectDuplicateNamespaces, detectDuplicateNamespaces_default;
-var init_detectDuplicateNamespaces = __esm({
-  "src/helpers/detectDuplicateNamespaces.ts"() {
-    "use strict";
-    detectDuplicateNamespaces = (translations2) => {
-      const seenNamespaces = /* @__PURE__ */ new Set();
-      const duplicateNamespaces = [];
-      Object.keys(translations2).forEach((namespace2) => {
-        if (seenNamespaces.has(namespace2)) {
-          duplicateNamespaces.push(namespace2);
-        }
-        seenNamespaces.add(namespace2);
-      });
-      if (duplicateNamespaces.length > 0) {
-        const message = `[TranslateSheet] Duplicate namespaces detected: ${duplicateNamespaces.join(
-          ", "
-        )}. Please ensure each namespace is unique.`;
-        console.error(message);
-        process.exit(1);
-      }
-    };
-    detectDuplicateNamespaces_default = detectDuplicateNamespaces;
-  }
-});
-
-// ../../../node_modules/data-uri-to-buffer/dist/index.js
-function dataUriToBuffer(uri) {
-  if (!/^data:/i.test(uri)) {
-    throw new TypeError('`uri` does not appear to be a Data URI (must begin with "data:")');
-  }
-  uri = uri.replace(/\r?\n/g, "");
-  const firstComma = uri.indexOf(",");
-  if (firstComma === -1 || firstComma <= 4) {
-    throw new TypeError("malformed data: URI");
-  }
-  const meta = uri.substring(5, firstComma).split(";");
-  let charset = "";
-  let base64 = false;
-  const type = meta[0] || "text/plain";
-  let typeFull = type;
-  for (let i2 = 1; i2 < meta.length; i2++) {
-    if (meta[i2] === "base64") {
-      base64 = true;
-    } else if (meta[i2]) {
-      typeFull += `;${meta[i2]}`;
-      if (meta[i2].indexOf("charset=") === 0) {
-        charset = meta[i2].substring(8);
-      }
-    }
-  }
-  if (!meta[0] && !charset.length) {
-    typeFull += ";charset=US-ASCII";
-    charset = "US-ASCII";
-  }
-  const encoding = base64 ? "base64" : "ascii";
-  const data = unescape(uri.substring(firstComma + 1));
-  const buffer = Buffer.from(data, encoding);
-  buffer.type = type;
-  buffer.typeFull = typeFull;
-  buffer.charset = charset;
-  return buffer;
-}
-var dist_default;
-var init_dist = __esm({
-  "../../../node_modules/data-uri-to-buffer/dist/index.js"() {
-    "use strict";
-    dist_default = dataUriToBuffer;
-  }
-});
-
 // ../../../node_modules/web-streams-polyfill/dist/ponyfill.es2018.js
 var require_ponyfill_es2018 = __commonJS({
   "../../../node_modules/web-streams-polyfill/dist/ponyfill.es2018.js"(exports, module) {
@@ -5235,78 +4838,6 @@ var init_esm_min = __esm({
   }
 });
 
-// ../../../node_modules/node-fetch/src/errors/base.js
-var FetchBaseError;
-var init_base = __esm({
-  "../../../node_modules/node-fetch/src/errors/base.js"() {
-    "use strict";
-    FetchBaseError = class extends Error {
-      constructor(message, type) {
-        super(message);
-        Error.captureStackTrace(this, this.constructor);
-        this.type = type;
-      }
-      get name() {
-        return this.constructor.name;
-      }
-      get [Symbol.toStringTag]() {
-        return this.constructor.name;
-      }
-    };
-  }
-});
-
-// ../../../node_modules/node-fetch/src/errors/fetch-error.js
-var FetchError;
-var init_fetch_error = __esm({
-  "../../../node_modules/node-fetch/src/errors/fetch-error.js"() {
-    "use strict";
-    init_base();
-    FetchError = class extends FetchBaseError {
-      /**
-       * @param  {string} message -      Error message for human
-       * @param  {string} [type] -        Error type for machine
-       * @param  {SystemError} [systemError] - For Node.js system error
-       */
-      constructor(message, type, systemError) {
-        super(message, type);
-        if (systemError) {
-          this.code = this.errno = systemError.code;
-          this.erroredSysCall = systemError.syscall;
-        }
-      }
-    };
-  }
-});
-
-// ../../../node_modules/node-fetch/src/utils/is.js
-var NAME, isURLSearchParameters, isBlob, isAbortSignal, isDomainOrSubdomain, isSameProtocol;
-var init_is = __esm({
-  "../../../node_modules/node-fetch/src/utils/is.js"() {
-    "use strict";
-    NAME = Symbol.toStringTag;
-    isURLSearchParameters = (object) => {
-      return typeof object === "object" && typeof object.append === "function" && typeof object.delete === "function" && typeof object.get === "function" && typeof object.getAll === "function" && typeof object.has === "function" && typeof object.set === "function" && typeof object.sort === "function" && object[NAME] === "URLSearchParams";
-    };
-    isBlob = (object) => {
-      return object && typeof object === "object" && typeof object.arrayBuffer === "function" && typeof object.type === "string" && typeof object.stream === "function" && typeof object.constructor === "function" && /^(Blob|File)$/.test(object[NAME]);
-    };
-    isAbortSignal = (object) => {
-      return typeof object === "object" && (object[NAME] === "AbortSignal" || object[NAME] === "EventTarget");
-    };
-    isDomainOrSubdomain = (destination, original) => {
-      const orig = new URL(original).hostname;
-      const dest = new URL(destination).hostname;
-      return orig === dest || orig.endsWith(`.${dest}`);
-    };
-    isSameProtocol = (destination, original) => {
-      const orig = new URL(original).protocol;
-      const dest = new URL(destination).protocol;
-      return orig === dest;
-    };
-  }
-});
-
 // ../../../node_modules/node-domexception/index.js
 var require_node_domexception = __commonJS({
   "../../../node_modules/node-domexception/index.js"(exports, module) {
@@ -5713,10 +5244,535 @@ var init_multipart_parser = __esm({
   }
 });
 
+// src/cli/index.ts
+import { program } from "commander";
+
+// src/cli/generateCommand.ts
+import { Command } from "commander";
+
+// src/cli/loadConfig.ts
+import { existsSync } from "fs";
+import path from "path";
+var loadConfig = (configPath = "./translateSheetConfig.js") => {
+  if (existsSync(configPath)) {
+    try {
+      const config = __require(path.resolve(configPath));
+      return config;
+    } catch (error) {
+      console.error(`Failed to load config file at ${configPath}:`, error);
+      process.exit(1);
+    }
+  }
+  return {};
+};
+var loadConfig_default = loadConfig;
+
+// src/cli/extractTranslations.ts
+import * as glob from "glob";
+import fs from "fs";
+import path2 from "path";
+var extractTranslations = () => {
+  const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}");
+  const translations = {};
+  files.forEach((file) => {
+    const filePath = path2.resolve(file);
+    if (fs.statSync(filePath).isDirectory()) {
+      return;
+    }
+    const content = fs.readFileSync(filePath, "utf-8");
+    const regex = /TranslateSheet\.create\("([^"]+)",\s*({[\s\S]*?})\)/g;
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      const namespace = match[1];
+      const translationObject = eval(`(${match[2]})`);
+      if (!translations[namespace]) {
+        translations[namespace] = {};
+      }
+      Object.assign(translations[namespace], translationObject);
+    }
+  });
+  return translations;
+};
+var extractTranslations_default = extractTranslations;
+
+// src/cli/generatePrimaryLanguageFile.ts
+import fs2 from "fs";
+import path3 from "path";
+
+// src/helpers/formatAsJSON.ts
+var formatAsJSON = (content2) => {
+  return JSON.stringify(content2, null, 2);
+};
+var formatAsJSON_default = formatAsJSON;
+
+// src/helpers/sanitizeLanguage.ts
+var sanitizeLanguage = (lang) => lang.replace(/-/g, "_");
+var sanitizeLanguage_default = sanitizeLanguage;
+
+// src/helpers/formatAsJavaScript.ts
+var formatAsJavaScript = (content2, targetLanguage) => {
+  const sanitizedLanguage = sanitizeLanguage_default(targetLanguage);
+  const formatObject = (obj, indent = 2) => {
+    return Object.entries(obj).map(([key, value]) => {
+      const formattedKey = key.includes("-") ? `"${key}"` : key;
+      const formattedValue = typeof value === "object" && !Array.isArray(value) ? `{
+${formatObject(value, indent + 2)}
+${" ".repeat(indent)}}` : JSON.stringify(value);
+      return `${" ".repeat(indent)}${formattedKey}: ${formattedValue},`;
+    }).join("\n");
+  };
+  const objectString = formatObject(content2);
+  return `const ${sanitizedLanguage} = {
+${objectString}
+};
+export default ${sanitizedLanguage};`;
+};
+var formatAsJavaScript_default = formatAsJavaScript;
+
+// src/helpers/formatAsTypeScript.ts
+var formatAsTypeScript = (content2, targetLanguage) => {
+  const sanitizedLanguage = sanitizeLanguage_default(targetLanguage);
+  const formatObject = (obj, indent = 2) => {
+    return Object.entries(obj).map(([key, value]) => {
+      const formattedKey = key.includes("-") ? `"${key}"` : key;
+      const formattedValue = typeof value === "object" && !Array.isArray(value) ? `{
+${formatObject(value, indent + 2)}
+${" ".repeat(indent)}}` : JSON.stringify(value);
+      return `${" ".repeat(indent)}${formattedKey}: ${formattedValue},`;
+    }).join("\n");
+  };
+  const objectString = formatObject(content2);
+  return `const ${sanitizedLanguage}: Record<string, any> = {
+${objectString}
+};
+export default ${sanitizedLanguage};`;
+};
+var formatAsTypeScript_default = formatAsTypeScript;
+
+// src/cli/generatePrimaryLanguageFile.ts
+var generatePrimaryLanguageFile = ({
+  output,
+  fileExtension,
+  primaryLanguage,
+  primaryLanguageContent
+  // TODO: when we hook up the DB we will need these values to send the
+  // primary language file
+}) => {
+  let formattedContent;
+  if (fileExtension === ".ts") {
+    formattedContent = formatAsTypeScript_default(primaryLanguageContent, primaryLanguage);
+  } else if (fileExtension === ".js") {
+    formattedContent = formatAsJavaScript_default(primaryLanguageContent, primaryLanguage);
+  } else if (fileExtension === ".json") {
+    formattedContent = formatAsJSON_default(primaryLanguageContent);
+  } else {
+    throw new Error(`Unsupported file extension: ${fileExtension}`);
+  }
+  const filePath2 = path3.join(output, `${primaryLanguage}${fileExtension}`);
+  fs2.writeFileSync(filePath2, formattedContent, "utf-8");
+  console.log(`Generated primary language file: ${filePath2}`);
+};
+var generatePrimaryLanguageFile_default = generatePrimaryLanguageFile;
+
+// src/cli/sendTranslationRequest.ts
+var sendTranslationRequest = (_0) => __async(void 0, [_0], function* ({
+  content: content2,
+  targetLanguage,
+  apiKey
+}) {
+  try {
+    console.log("Sending translation request...");
+    const response = yield fetch(
+      "https://api.translatesheet.co/translations/translate",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          content: content2,
+          targetLanguage,
+          apiKey
+        })
+      }
+    );
+    if (!response.ok) {
+      const errorResponse = yield response.json();
+      console.log(response.status);
+      if (response.status === 403) {
+        throw new Error(errorResponse.error);
+      }
+      if (response.status === 401) {
+        throw new Error(
+          "Unauthorized. Ensure your API key has the correct permissions."
+        );
+      }
+      if (response.status === 400) {
+        throw new Error(
+          `Bad request: ${(errorResponse == null ? void 0 : errorResponse.error) || "Invalid request payload."}`
+        );
+      }
+      throw new Error(
+        `API Error: ${response.status} ${response.statusText} - ${(errorResponse == null ? void 0 : errorResponse.error) || "Unexpected error."}`
+      );
+    }
+    const data = yield response.json();
+    return data.translatedContent;
+  } catch (error) {
+    console.error("Error translating content via API:", error);
+    throw error;
+  }
+});
+var sendTranslationRequest_default = sendTranslationRequest;
+
+// src/cli/requestTranslations.ts
+import fs3 from "fs";
+import path4 from "path";
+
+// src/cli/formatTranslatedContent.ts
+var formatTranslatedContent = ({
+  fileExtension,
+  translatedContent,
+  targetLanguage
+}) => {
+  let formattedContent;
+  if (fileExtension === ".js") {
+    formattedContent = formatAsJavaScript_default(translatedContent, targetLanguage);
+  } else if (fileExtension === ".ts") {
+    formattedContent = formatAsTypeScript_default(translatedContent, targetLanguage);
+  } else if (fileExtension === ".json") {
+    formattedContent = formatAsJSON_default(translatedContent);
+  } else {
+    throw new Error(`Unsupported file extension: ${fileExtension}`);
+  }
+  return formattedContent;
+};
+var formatTranslatedContent_default = formatTranslatedContent;
+
+// src/cli/requestTranslations.ts
+var requestTranslations = (_0) => __async(void 0, [_0], function* ({
+  output,
+  primaryLanguageContent,
+  primaryLanguage,
+  languages,
+  fileExtension,
+  apiKey
+}) {
+  const sanitizedPrimaryLanguage = sanitizeLanguage_default(primaryLanguage);
+  const imports = [
+    `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`
+  ];
+  const resources = [
+    `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`
+  ];
+  const uniqueLanguages = Array.from(new Set(languages));
+  for (const targetLanguage of uniqueLanguages) {
+    const sanitizedLanguage = sanitizeLanguage_default(targetLanguage);
+    console.log(`\u{1F30D} Translating content to ${targetLanguage}...`);
+    try {
+      const translatedContent = yield sendTranslationRequest_default({
+        content: primaryLanguageContent,
+        targetLanguage,
+        apiKey
+      });
+      const formattedContent = formatTranslatedContent_default({
+        fileExtension,
+        translatedContent,
+        targetLanguage
+      });
+      const filePath2 = path4.join(output, `${targetLanguage}${fileExtension}`);
+      fs3.writeFileSync(filePath2, formattedContent, "utf-8");
+      console.log(`\u2705 Generated translation file: ${filePath2}`);
+      imports.push(`import ${sanitizedLanguage} from "./${targetLanguage}";`);
+      resources.push(`"${targetLanguage}": ${sanitizedLanguage}`);
+    } catch (error) {
+      console.error(
+        `\u274C Failed to generate translation for ${targetLanguage}:`,
+        error
+      );
+    }
+  }
+  const indexContent = `
+${imports.join("\n")}
+
+const resources = {
+  ${resources.join(",\n  ")}
+};
+
+export default resources;
+`;
+  const indexFilePath = path4.join(output, `resources${fileExtension}`);
+  fs3.writeFileSync(indexFilePath, indexContent, "utf-8");
+  console.log(
+    `\u{1F4E6} Generated resources${fileExtension} file with all translations: ${indexFilePath}`
+  );
+});
+var requestTranslations_default = requestTranslations;
+
+// src/helpers/detectDuplicateNamespaces.ts
+var detectDuplicateNamespaces = (translations2) => {
+  const seenNamespaces = /* @__PURE__ */ new Set();
+  const duplicateNamespaces = [];
+  Object.keys(translations2).forEach((namespace2) => {
+    if (seenNamespaces.has(namespace2)) {
+      duplicateNamespaces.push(namespace2);
+    }
+    seenNamespaces.add(namespace2);
+  });
+  if (duplicateNamespaces.length > 0) {
+    const message = `[TranslateSheet] Duplicate namespaces detected: ${duplicateNamespaces.join(
+      ", "
+    )}. Please ensure each namespace is unique.`;
+    console.error(message);
+    process.exit(1);
+  }
+};
+var detectDuplicateNamespaces_default = detectDuplicateNamespaces;
+
+// ../../../node_modules/node-fetch/src/index.js
+import http2 from "node:http";
+import https from "node:https";
+import zlib from "node:zlib";
+import Stream2, { PassThrough as PassThrough2, pipeline as pump } from "node:stream";
+import { Buffer as Buffer3 } from "node:buffer";
+
+// ../../../node_modules/data-uri-to-buffer/dist/index.js
+function dataUriToBuffer(uri) {
+  if (!/^data:/i.test(uri)) {
+    throw new TypeError('`uri` does not appear to be a Data URI (must begin with "data:")');
+  }
+  uri = uri.replace(/\r?\n/g, "");
+  const firstComma = uri.indexOf(",");
+  if (firstComma === -1 || firstComma <= 4) {
+    throw new TypeError("malformed data: URI");
+  }
+  const meta = uri.substring(5, firstComma).split(";");
+  let charset = "";
+  let base64 = false;
+  const type = meta[0] || "text/plain";
+  let typeFull = type;
+  for (let i2 = 1; i2 < meta.length; i2++) {
+    if (meta[i2] === "base64") {
+      base64 = true;
+    } else if (meta[i2]) {
+      typeFull += `;${meta[i2]}`;
+      if (meta[i2].indexOf("charset=") === 0) {
+        charset = meta[i2].substring(8);
+      }
+    }
+  }
+  if (!meta[0] && !charset.length) {
+    typeFull += ";charset=US-ASCII";
+    charset = "US-ASCII";
+  }
+  const encoding = base64 ? "base64" : "ascii";
+  const data = unescape(uri.substring(firstComma + 1));
+  const buffer = Buffer.from(data, encoding);
+  buffer.type = type;
+  buffer.typeFull = typeFull;
+  buffer.charset = charset;
+  return buffer;
+}
+var dist_default = dataUriToBuffer;
+
 // ../../../node_modules/node-fetch/src/body.js
+init_fetch_blob();
+init_esm_min();
 import Stream, { PassThrough } from "node:stream";
 import { types, deprecate, promisify } from "node:util";
 import { Buffer as Buffer2 } from "node:buffer";
+
+// ../../../node_modules/node-fetch/src/errors/base.js
+var FetchBaseError = class extends Error {
+  constructor(message, type) {
+    super(message);
+    Error.captureStackTrace(this, this.constructor);
+    this.type = type;
+  }
+  get name() {
+    return this.constructor.name;
+  }
+  get [Symbol.toStringTag]() {
+    return this.constructor.name;
+  }
+};
+
+// ../../../node_modules/node-fetch/src/errors/fetch-error.js
+var FetchError = class extends FetchBaseError {
+  /**
+   * @param  {string} message -      Error message for human
+   * @param  {string} [type] -        Error type for machine
+   * @param  {SystemError} [systemError] - For Node.js system error
+   */
+  constructor(message, type, systemError) {
+    super(message, type);
+    if (systemError) {
+      this.code = this.errno = systemError.code;
+      this.erroredSysCall = systemError.syscall;
+    }
+  }
+};
+
+// ../../../node_modules/node-fetch/src/utils/is.js
+var NAME = Symbol.toStringTag;
+var isURLSearchParameters = (object) => {
+  return typeof object === "object" && typeof object.append === "function" && typeof object.delete === "function" && typeof object.get === "function" && typeof object.getAll === "function" && typeof object.has === "function" && typeof object.set === "function" && typeof object.sort === "function" && object[NAME] === "URLSearchParams";
+};
+var isBlob = (object) => {
+  return object && typeof object === "object" && typeof object.arrayBuffer === "function" && typeof object.type === "string" && typeof object.stream === "function" && typeof object.constructor === "function" && /^(Blob|File)$/.test(object[NAME]);
+};
+var isAbortSignal = (object) => {
+  return typeof object === "object" && (object[NAME] === "AbortSignal" || object[NAME] === "EventTarget");
+};
+var isDomainOrSubdomain = (destination, original) => {
+  const orig = new URL(original).hostname;
+  const dest = new URL(destination).hostname;
+  return orig === dest || orig.endsWith(`.${dest}`);
+};
+var isSameProtocol = (destination, original) => {
+  const orig = new URL(original).protocol;
+  const dest = new URL(destination).protocol;
+  return orig === dest;
+};
+
+// ../../../node_modules/node-fetch/src/body.js
+var pipeline = promisify(Stream.pipeline);
+var INTERNALS = Symbol("Body internals");
+var Body = class {
+  constructor(body, {
+    size = 0
+  } = {}) {
+    let boundary = null;
+    if (body === null) {
+      body = null;
+    } else if (isURLSearchParameters(body)) {
+      body = Buffer2.from(body.toString());
+    } else if (isBlob(body)) {
+    } else if (Buffer2.isBuffer(body)) {
+    } else if (types.isAnyArrayBuffer(body)) {
+      body = Buffer2.from(body);
+    } else if (ArrayBuffer.isView(body)) {
+      body = Buffer2.from(body.buffer, body.byteOffset, body.byteLength);
+    } else if (body instanceof Stream) {
+    } else if (body instanceof FormData) {
+      body = formDataToBlob(body);
+      boundary = body.type.split("=")[1];
+    } else {
+      body = Buffer2.from(String(body));
+    }
+    let stream = body;
+    if (Buffer2.isBuffer(body)) {
+      stream = Stream.Readable.from(body);
+    } else if (isBlob(body)) {
+      stream = Stream.Readable.from(body.stream());
+    }
+    this[INTERNALS] = {
+      body,
+      stream,
+      boundary,
+      disturbed: false,
+      error: null
+    };
+    this.size = size;
+    if (body instanceof Stream) {
+      body.on("error", (error_) => {
+        const error = error_ instanceof FetchBaseError ? error_ : new FetchError(`Invalid response body while trying to fetch ${this.url}: ${error_.message}`, "system", error_);
+        this[INTERNALS].error = error;
+      });
+    }
+  }
+  get body() {
+    return this[INTERNALS].stream;
+  }
+  get bodyUsed() {
+    return this[INTERNALS].disturbed;
+  }
+  /**
+   * Decode response as ArrayBuffer
+   *
+   * @return  Promise
+   */
+  arrayBuffer() {
+    return __async(this, null, function* () {
+      const { buffer, byteOffset, byteLength } = yield consumeBody(this);
+      return buffer.slice(byteOffset, byteOffset + byteLength);
+    });
+  }
+  formData() {
+    return __async(this, null, function* () {
+      const ct = this.headers.get("content-type");
+      if (ct.startsWith("application/x-www-form-urlencoded")) {
+        const formData = new FormData();
+        const parameters = new URLSearchParams(yield this.text());
+        for (const [name, value] of parameters) {
+          formData.append(name, value);
+        }
+        return formData;
+      }
+      const { toFormData: toFormData2 } = yield Promise.resolve().then(() => (init_multipart_parser(), multipart_parser_exports));
+      return toFormData2(this.body, ct);
+    });
+  }
+  /**
+   * Return raw response as Blob
+   *
+   * @return Promise
+   */
+  blob() {
+    return __async(this, null, function* () {
+      const ct = this.headers && this.headers.get("content-type") || this[INTERNALS].body && this[INTERNALS].body.type || "";
+      const buf = yield this.arrayBuffer();
+      return new fetch_blob_default([buf], {
+        type: ct
+      });
+    });
+  }
+  /**
+   * Decode response as json
+   *
+   * @return  Promise
+   */
+  json() {
+    return __async(this, null, function* () {
+      const text = yield this.text();
+      return JSON.parse(text);
+    });
+  }
+  /**
+   * Decode response as text
+   *
+   * @return  Promise
+   */
+  text() {
+    return __async(this, null, function* () {
+      const buffer = yield consumeBody(this);
+      return new TextDecoder().decode(buffer);
+    });
+  }
+  /**
+   * Decode response as buffer (non-spec api)
+   *
+   * @return  Promise
+   */
+  buffer() {
+    return consumeBody(this);
+  }
+};
+Body.prototype.buffer = deprecate(Body.prototype.buffer, "Please use 'response.arrayBuffer()' instead of 'response.buffer()'", "node-fetch#buffer");
+Object.defineProperties(Body.prototype, {
+  body: { enumerable: true },
+  bodyUsed: { enumerable: true },
+  arrayBuffer: { enumerable: true },
+  blob: { enumerable: true },
+  json: { enumerable: true },
+  text: { enumerable: true },
+  data: { get: deprecate(
+    () => {
+    },
+    "data doesn't exist, use json(), text(), arrayBuffer(), or body instead",
+    "https://github.com/node-fetch/node-fetch/issues/1000 (response)"
+  ) }
+});
 function consumeBody(data) {
   return __async(this, null, function* () {
     if (data[INTERNALS].disturbed) {
@@ -5775,230 +5831,246 @@ function consumeBody(data) {
     }
   });
 }
-var pipeline, INTERNALS, Body, clone, getNonSpecFormDataBoundary, extractContentType, getTotalBytes, writeToStream;
-var init_body = __esm({
-  "../../../node_modules/node-fetch/src/body.js"() {
-    "use strict";
-    init_fetch_blob();
-    init_esm_min();
-    init_fetch_error();
-    init_base();
-    init_is();
-    pipeline = promisify(Stream.pipeline);
-    INTERNALS = Symbol("Body internals");
-    Body = class {
-      constructor(body, {
-        size = 0
-      } = {}) {
-        let boundary = null;
-        if (body === null) {
-          body = null;
-        } else if (isURLSearchParameters(body)) {
-          body = Buffer2.from(body.toString());
-        } else if (isBlob(body)) {
-        } else if (Buffer2.isBuffer(body)) {
-        } else if (types.isAnyArrayBuffer(body)) {
-          body = Buffer2.from(body);
-        } else if (ArrayBuffer.isView(body)) {
-          body = Buffer2.from(body.buffer, body.byteOffset, body.byteLength);
-        } else if (body instanceof Stream) {
-        } else if (body instanceof FormData) {
-          body = formDataToBlob(body);
-          boundary = body.type.split("=")[1];
-        } else {
-          body = Buffer2.from(String(body));
-        }
-        let stream = body;
-        if (Buffer2.isBuffer(body)) {
-          stream = Stream.Readable.from(body);
-        } else if (isBlob(body)) {
-          stream = Stream.Readable.from(body.stream());
-        }
-        this[INTERNALS] = {
-          body,
-          stream,
-          boundary,
-          disturbed: false,
-          error: null
-        };
-        this.size = size;
-        if (body instanceof Stream) {
-          body.on("error", (error_) => {
-            const error = error_ instanceof FetchBaseError ? error_ : new FetchError(`Invalid response body while trying to fetch ${this.url}: ${error_.message}`, "system", error_);
-            this[INTERNALS].error = error;
-          });
-        }
-      }
-      get body() {
-        return this[INTERNALS].stream;
-      }
-      get bodyUsed() {
-        return this[INTERNALS].disturbed;
-      }
-      /**
-       * Decode response as ArrayBuffer
-       *
-       * @return  Promise
-       */
-      arrayBuffer() {
-        return __async(this, null, function* () {
-          const { buffer, byteOffset, byteLength } = yield consumeBody(this);
-          return buffer.slice(byteOffset, byteOffset + byteLength);
-        });
-      }
-      formData() {
-        return __async(this, null, function* () {
-          const ct = this.headers.get("content-type");
-          if (ct.startsWith("application/x-www-form-urlencoded")) {
-            const formData = new FormData();
-            const parameters = new URLSearchParams(yield this.text());
-            for (const [name, value] of parameters) {
-              formData.append(name, value);
-            }
-            return formData;
-          }
-          const { toFormData: toFormData2 } = yield Promise.resolve().then(() => (init_multipart_parser(), multipart_parser_exports));
-          return toFormData2(this.body, ct);
-        });
-      }
-      /**
-       * Return raw response as Blob
-       *
-       * @return Promise
-       */
-      blob() {
-        return __async(this, null, function* () {
-          const ct = this.headers && this.headers.get("content-type") || this[INTERNALS].body && this[INTERNALS].body.type || "";
-          const buf = yield this.arrayBuffer();
-          return new fetch_blob_default([buf], {
-            type: ct
-          });
-        });
-      }
-      /**
-       * Decode response as json
-       *
-       * @return  Promise
-       */
-      json() {
-        return __async(this, null, function* () {
-          const text = yield this.text();
-          return JSON.parse(text);
-        });
-      }
-      /**
-       * Decode response as text
-       *
-       * @return  Promise
-       */
-      text() {
-        return __async(this, null, function* () {
-          const buffer = yield consumeBody(this);
-          return new TextDecoder().decode(buffer);
-        });
-      }
-      /**
-       * Decode response as buffer (non-spec api)
-       *
-       * @return  Promise
-       */
-      buffer() {
-        return consumeBody(this);
-      }
-    };
-    Body.prototype.buffer = deprecate(Body.prototype.buffer, "Please use 'response.arrayBuffer()' instead of 'response.buffer()'", "node-fetch#buffer");
-    Object.defineProperties(Body.prototype, {
-      body: { enumerable: true },
-      bodyUsed: { enumerable: true },
-      arrayBuffer: { enumerable: true },
-      blob: { enumerable: true },
-      json: { enumerable: true },
-      text: { enumerable: true },
-      data: { get: deprecate(
-        () => {
-        },
-        "data doesn't exist, use json(), text(), arrayBuffer(), or body instead",
-        "https://github.com/node-fetch/node-fetch/issues/1000 (response)"
-      ) }
-    });
-    clone = (instance, highWaterMark) => {
-      let p1;
-      let p2;
-      let { body } = instance[INTERNALS];
-      if (instance.bodyUsed) {
-        throw new Error("cannot clone body after it is used");
-      }
-      if (body instanceof Stream && typeof body.getBoundary !== "function") {
-        p1 = new PassThrough({ highWaterMark });
-        p2 = new PassThrough({ highWaterMark });
-        body.pipe(p1);
-        body.pipe(p2);
-        instance[INTERNALS].stream = p1;
-        body = p2;
-      }
-      return body;
-    };
-    getNonSpecFormDataBoundary = deprecate(
-      (body) => body.getBoundary(),
-      "form-data doesn't follow the spec and requires special treatment. Use alternative package",
-      "https://github.com/node-fetch/node-fetch/issues/1167"
-    );
-    extractContentType = (body, request) => {
-      if (body === null) {
-        return null;
-      }
-      if (typeof body === "string") {
-        return "text/plain;charset=UTF-8";
-      }
-      if (isURLSearchParameters(body)) {
-        return "application/x-www-form-urlencoded;charset=UTF-8";
-      }
-      if (isBlob(body)) {
-        return body.type || null;
-      }
-      if (Buffer2.isBuffer(body) || types.isAnyArrayBuffer(body) || ArrayBuffer.isView(body)) {
-        return null;
-      }
-      if (body instanceof FormData) {
-        return `multipart/form-data; boundary=${request[INTERNALS].boundary}`;
-      }
-      if (body && typeof body.getBoundary === "function") {
-        return `multipart/form-data;boundary=${getNonSpecFormDataBoundary(body)}`;
-      }
-      if (body instanceof Stream) {
-        return null;
-      }
-      return "text/plain;charset=UTF-8";
-    };
-    getTotalBytes = (request) => {
-      const { body } = request[INTERNALS];
-      if (body === null) {
-        return 0;
-      }
-      if (isBlob(body)) {
-        return body.size;
-      }
-      if (Buffer2.isBuffer(body)) {
-        return body.length;
-      }
-      if (body && typeof body.getLengthSync === "function") {
-        return body.hasKnownLength && body.hasKnownLength() ? body.getLengthSync() : null;
-      }
-      return null;
-    };
-    writeToStream = (_0, _1) => __async(void 0, [_0, _1], function* (dest, { body }) {
-      if (body === null) {
-        dest.end();
-      } else {
-        yield pipeline(body, dest);
-      }
-    });
+var clone = (instance, highWaterMark) => {
+  let p1;
+  let p2;
+  let { body } = instance[INTERNALS];
+  if (instance.bodyUsed) {
+    throw new Error("cannot clone body after it is used");
+  }
+  if (body instanceof Stream && typeof body.getBoundary !== "function") {
+    p1 = new PassThrough({ highWaterMark });
+    p2 = new PassThrough({ highWaterMark });
+    body.pipe(p1);
+    body.pipe(p2);
+    instance[INTERNALS].stream = p1;
+    body = p2;
+  }
+  return body;
+};
+var getNonSpecFormDataBoundary = deprecate(
+  (body) => body.getBoundary(),
+  "form-data doesn't follow the spec and requires special treatment. Use alternative package",
+  "https://github.com/node-fetch/node-fetch/issues/1167"
+);
+var extractContentType = (body, request) => {
+  if (body === null) {
+    return null;
+  }
+  if (typeof body === "string") {
+    return "text/plain;charset=UTF-8";
+  }
+  if (isURLSearchParameters(body)) {
+    return "application/x-www-form-urlencoded;charset=UTF-8";
+  }
+  if (isBlob(body)) {
+    return body.type || null;
+  }
+  if (Buffer2.isBuffer(body) || types.isAnyArrayBuffer(body) || ArrayBuffer.isView(body)) {
+    return null;
+  }
+  if (body instanceof FormData) {
+    return `multipart/form-data; boundary=${request[INTERNALS].boundary}`;
+  }
+  if (body && typeof body.getBoundary === "function") {
+    return `multipart/form-data;boundary=${getNonSpecFormDataBoundary(body)}`;
+  }
+  if (body instanceof Stream) {
+    return null;
+  }
+  return "text/plain;charset=UTF-8";
+};
+var getTotalBytes = (request) => {
+  const { body } = request[INTERNALS];
+  if (body === null) {
+    return 0;
+  }
+  if (isBlob(body)) {
+    return body.size;
+  }
+  if (Buffer2.isBuffer(body)) {
+    return body.length;
+  }
+  if (body && typeof body.getLengthSync === "function") {
+    return body.hasKnownLength && body.hasKnownLength() ? body.getLengthSync() : null;
+  }
+  return null;
+};
+var writeToStream = (_0, _1) => __async(void 0, [_0, _1], function* (dest, { body }) {
+  if (body === null) {
+    dest.end();
+  } else {
+    yield pipeline(body, dest);
   }
 });
 
 // ../../../node_modules/node-fetch/src/headers.js
 import { types as types2 } from "node:util";
 import http from "node:http";
+var validateHeaderName = typeof http.validateHeaderName === "function" ? http.validateHeaderName : (name) => {
+  if (!/^[\^`\-\w!#$%&'*+.|~]+$/.test(name)) {
+    const error = new TypeError(`Header name must be a valid HTTP token [${name}]`);
+    Object.defineProperty(error, "code", { value: "ERR_INVALID_HTTP_TOKEN" });
+    throw error;
+  }
+};
+var validateHeaderValue = typeof http.validateHeaderValue === "function" ? http.validateHeaderValue : (name, value) => {
+  if (/[^\t\u0020-\u007E\u0080-\u00FF]/.test(value)) {
+    const error = new TypeError(`Invalid character in header content ["${name}"]`);
+    Object.defineProperty(error, "code", { value: "ERR_INVALID_CHAR" });
+    throw error;
+  }
+};
+var Headers = class _Headers extends URLSearchParams {
+  /**
+   * Headers class
+   *
+   * @constructor
+   * @param {HeadersInit} [init] - Response headers
+   */
+  constructor(init) {
+    let result = [];
+    if (init instanceof _Headers) {
+      const raw = init.raw();
+      for (const [name, values] of Object.entries(raw)) {
+        result.push(...values.map((value) => [name, value]));
+      }
+    } else if (init == null) {
+    } else if (typeof init === "object" && !types2.isBoxedPrimitive(init)) {
+      const method = init[Symbol.iterator];
+      if (method == null) {
+        result.push(...Object.entries(init));
+      } else {
+        if (typeof method !== "function") {
+          throw new TypeError("Header pairs must be iterable");
+        }
+        result = [...init].map((pair) => {
+          if (typeof pair !== "object" || types2.isBoxedPrimitive(pair)) {
+            throw new TypeError("Each header pair must be an iterable object");
+          }
+          return [...pair];
+        }).map((pair) => {
+          if (pair.length !== 2) {
+            throw new TypeError("Each header pair must be a name/value tuple");
+          }
+          return [...pair];
+        });
+      }
+    } else {
+      throw new TypeError("Failed to construct 'Headers': The provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)");
+    }
+    result = result.length > 0 ? result.map(([name, value]) => {
+      validateHeaderName(name);
+      validateHeaderValue(name, String(value));
+      return [String(name).toLowerCase(), String(value)];
+    }) : void 0;
+    super(result);
+    return new Proxy(this, {
+      get(target, p, receiver) {
+        switch (p) {
+          case "append":
+          case "set":
+            return (name, value) => {
+              validateHeaderName(name);
+              validateHeaderValue(name, String(value));
+              return URLSearchParams.prototype[p].call(
+                target,
+                String(name).toLowerCase(),
+                String(value)
+              );
+            };
+          case "delete":
+          case "has":
+          case "getAll":
+            return (name) => {
+              validateHeaderName(name);
+              return URLSearchParams.prototype[p].call(
+                target,
+                String(name).toLowerCase()
+              );
+            };
+          case "keys":
+            return () => {
+              target.sort();
+              return new Set(URLSearchParams.prototype.keys.call(target)).keys();
+            };
+          default:
+            return Reflect.get(target, p, receiver);
+        }
+      }
+    });
+  }
+  get [Symbol.toStringTag]() {
+    return this.constructor.name;
+  }
+  toString() {
+    return Object.prototype.toString.call(this);
+  }
+  get(name) {
+    const values = this.getAll(name);
+    if (values.length === 0) {
+      return null;
+    }
+    let value = values.join(", ");
+    if (/^content-encoding$/i.test(name)) {
+      value = value.toLowerCase();
+    }
+    return value;
+  }
+  forEach(callback, thisArg = void 0) {
+    for (const name of this.keys()) {
+      Reflect.apply(callback, thisArg, [this.get(name), name, this]);
+    }
+  }
+  *values() {
+    for (const name of this.keys()) {
+      yield this.get(name);
+    }
+  }
+  /**
+   * @type {() => IterableIterator<[string, string]>}
+   */
+  *entries() {
+    for (const name of this.keys()) {
+      yield [name, this.get(name)];
+    }
+  }
+  [Symbol.iterator]() {
+    return this.entries();
+  }
+  /**
+   * Node-fetch non-spec method
+   * returning all headers and their values as array
+   * @returns {Record<string, string[]>}
+   */
+  raw() {
+    return [...this.keys()].reduce((result, key) => {
+      result[key] = this.getAll(key);
+      return result;
+    }, {});
+  }
+  /**
+   * For better console.log(headers) and also to convert Headers into Node.js Request compatible format
+   */
+  [Symbol.for("nodejs.util.inspect.custom")]() {
+    return [...this.keys()].reduce((result, key) => {
+      const values = this.getAll(key);
+      if (key === "host") {
+        result[key] = values[0];
+      } else {
+        result[key] = values.length > 1 ? values : values[0];
+      }
+      return result;
+    }, {});
+  }
+};
+Object.defineProperties(
+  Headers.prototype,
+  ["get", "entries", "forEach", "values"].reduce((result, property) => {
+    result[property] = { enumerable: true };
+    return result;
+  }, {})
+);
 function fromRawHeaders(headers = []) {
   return new Headers(
     headers.reduce((result, value, index, array) => {
@@ -6017,330 +6089,143 @@ function fromRawHeaders(headers = []) {
     })
   );
 }
-var validateHeaderName, validateHeaderValue, Headers;
-var init_headers = __esm({
-  "../../../node_modules/node-fetch/src/headers.js"() {
-    "use strict";
-    validateHeaderName = typeof http.validateHeaderName === "function" ? http.validateHeaderName : (name) => {
-      if (!/^[\^`\-\w!#$%&'*+.|~]+$/.test(name)) {
-        const error = new TypeError(`Header name must be a valid HTTP token [${name}]`);
-        Object.defineProperty(error, "code", { value: "ERR_INVALID_HTTP_TOKEN" });
-        throw error;
-      }
-    };
-    validateHeaderValue = typeof http.validateHeaderValue === "function" ? http.validateHeaderValue : (name, value) => {
-      if (/[^\t\u0020-\u007E\u0080-\u00FF]/.test(value)) {
-        const error = new TypeError(`Invalid character in header content ["${name}"]`);
-        Object.defineProperty(error, "code", { value: "ERR_INVALID_CHAR" });
-        throw error;
-      }
-    };
-    Headers = class _Headers extends URLSearchParams {
-      /**
-       * Headers class
-       *
-       * @constructor
-       * @param {HeadersInit} [init] - Response headers
-       */
-      constructor(init) {
-        let result = [];
-        if (init instanceof _Headers) {
-          const raw = init.raw();
-          for (const [name, values] of Object.entries(raw)) {
-            result.push(...values.map((value) => [name, value]));
-          }
-        } else if (init == null) {
-        } else if (typeof init === "object" && !types2.isBoxedPrimitive(init)) {
-          const method = init[Symbol.iterator];
-          if (method == null) {
-            result.push(...Object.entries(init));
-          } else {
-            if (typeof method !== "function") {
-              throw new TypeError("Header pairs must be iterable");
-            }
-            result = [...init].map((pair) => {
-              if (typeof pair !== "object" || types2.isBoxedPrimitive(pair)) {
-                throw new TypeError("Each header pair must be an iterable object");
-              }
-              return [...pair];
-            }).map((pair) => {
-              if (pair.length !== 2) {
-                throw new TypeError("Each header pair must be a name/value tuple");
-              }
-              return [...pair];
-            });
-          }
-        } else {
-          throw new TypeError("Failed to construct 'Headers': The provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)");
-        }
-        result = result.length > 0 ? result.map(([name, value]) => {
-          validateHeaderName(name);
-          validateHeaderValue(name, String(value));
-          return [String(name).toLowerCase(), String(value)];
-        }) : void 0;
-        super(result);
-        return new Proxy(this, {
-          get(target, p, receiver) {
-            switch (p) {
-              case "append":
-              case "set":
-                return (name, value) => {
-                  validateHeaderName(name);
-                  validateHeaderValue(name, String(value));
-                  return URLSearchParams.prototype[p].call(
-                    target,
-                    String(name).toLowerCase(),
-                    String(value)
-                  );
-                };
-              case "delete":
-              case "has":
-              case "getAll":
-                return (name) => {
-                  validateHeaderName(name);
-                  return URLSearchParams.prototype[p].call(
-                    target,
-                    String(name).toLowerCase()
-                  );
-                };
-              case "keys":
-                return () => {
-                  target.sort();
-                  return new Set(URLSearchParams.prototype.keys.call(target)).keys();
-                };
-              default:
-                return Reflect.get(target, p, receiver);
-            }
-          }
-        });
-      }
-      get [Symbol.toStringTag]() {
-        return this.constructor.name;
-      }
-      toString() {
-        return Object.prototype.toString.call(this);
-      }
-      get(name) {
-        const values = this.getAll(name);
-        if (values.length === 0) {
-          return null;
-        }
-        let value = values.join(", ");
-        if (/^content-encoding$/i.test(name)) {
-          value = value.toLowerCase();
-        }
-        return value;
-      }
-      forEach(callback, thisArg = void 0) {
-        for (const name of this.keys()) {
-          Reflect.apply(callback, thisArg, [this.get(name), name, this]);
-        }
-      }
-      *values() {
-        for (const name of this.keys()) {
-          yield this.get(name);
-        }
-      }
-      /**
-       * @type {() => IterableIterator<[string, string]>}
-       */
-      *entries() {
-        for (const name of this.keys()) {
-          yield [name, this.get(name)];
-        }
-      }
-      [Symbol.iterator]() {
-        return this.entries();
-      }
-      /**
-       * Node-fetch non-spec method
-       * returning all headers and their values as array
-       * @returns {Record<string, string[]>}
-       */
-      raw() {
-        return [...this.keys()].reduce((result, key) => {
-          result[key] = this.getAll(key);
-          return result;
-        }, {});
-      }
-      /**
-       * For better console.log(headers) and also to convert Headers into Node.js Request compatible format
-       */
-      [Symbol.for("nodejs.util.inspect.custom")]() {
-        return [...this.keys()].reduce((result, key) => {
-          const values = this.getAll(key);
-          if (key === "host") {
-            result[key] = values[0];
-          } else {
-            result[key] = values.length > 1 ? values : values[0];
-          }
-          return result;
-        }, {});
-      }
-    };
-    Object.defineProperties(
-      Headers.prototype,
-      ["get", "entries", "forEach", "values"].reduce((result, property) => {
-        result[property] = { enumerable: true };
-        return result;
-      }, {})
-    );
-  }
-});
 
 // ../../../node_modules/node-fetch/src/utils/is-redirect.js
-var redirectStatus, isRedirect;
-var init_is_redirect = __esm({
-  "../../../node_modules/node-fetch/src/utils/is-redirect.js"() {
-    "use strict";
-    redirectStatus = /* @__PURE__ */ new Set([301, 302, 303, 307, 308]);
-    isRedirect = (code) => {
-      return redirectStatus.has(code);
-    };
-  }
-});
+var redirectStatus = /* @__PURE__ */ new Set([301, 302, 303, 307, 308]);
+var isRedirect = (code) => {
+  return redirectStatus.has(code);
+};
 
 // ../../../node_modules/node-fetch/src/response.js
-var INTERNALS2, Response;
-var init_response = __esm({
-  "../../../node_modules/node-fetch/src/response.js"() {
-    "use strict";
-    init_headers();
-    init_body();
-    init_is_redirect();
-    INTERNALS2 = Symbol("Response internals");
-    Response = class _Response extends Body {
-      constructor(body = null, options = {}) {
-        super(body, options);
-        const status = options.status != null ? options.status : 200;
-        const headers = new Headers(options.headers);
-        if (body !== null && !headers.has("Content-Type")) {
-          const contentType = extractContentType(body, this);
-          if (contentType) {
-            headers.append("Content-Type", contentType);
-          }
-        }
-        this[INTERNALS2] = {
-          type: "default",
-          url: options.url,
-          status,
-          statusText: options.statusText || "",
-          headers,
-          counter: options.counter,
-          highWaterMark: options.highWaterMark
-        };
+var INTERNALS2 = Symbol("Response internals");
+var Response = class _Response extends Body {
+  constructor(body = null, options = {}) {
+    super(body, options);
+    const status = options.status != null ? options.status : 200;
+    const headers = new Headers(options.headers);
+    if (body !== null && !headers.has("Content-Type")) {
+      const contentType = extractContentType(body, this);
+      if (contentType) {
+        headers.append("Content-Type", contentType);
       }
-      get type() {
-        return this[INTERNALS2].type;
-      }
-      get url() {
-        return this[INTERNALS2].url || "";
-      }
-      get status() {
-        return this[INTERNALS2].status;
-      }
-      /**
-       * Convenience property representing if the request ended normally
-       */
-      get ok() {
-        return this[INTERNALS2].status >= 200 && this[INTERNALS2].status < 300;
-      }
-      get redirected() {
-        return this[INTERNALS2].counter > 0;
-      }
-      get statusText() {
-        return this[INTERNALS2].statusText;
-      }
-      get headers() {
-        return this[INTERNALS2].headers;
-      }
-      get highWaterMark() {
-        return this[INTERNALS2].highWaterMark;
-      }
-      /**
-       * Clone this response
-       *
-       * @return  Response
-       */
-      clone() {
-        return new _Response(clone(this, this.highWaterMark), {
-          type: this.type,
-          url: this.url,
-          status: this.status,
-          statusText: this.statusText,
-          headers: this.headers,
-          ok: this.ok,
-          redirected: this.redirected,
-          size: this.size,
-          highWaterMark: this.highWaterMark
-        });
-      }
-      /**
-       * @param {string} url    The URL that the new response is to originate from.
-       * @param {number} status An optional status code for the response (e.g., 302.)
-       * @returns {Response}    A Response object.
-       */
-      static redirect(url, status = 302) {
-        if (!isRedirect(status)) {
-          throw new RangeError('Failed to execute "redirect" on "response": Invalid status code');
-        }
-        return new _Response(null, {
-          headers: {
-            location: new URL(url).toString()
-          },
-          status
-        });
-      }
-      static error() {
-        const response = new _Response(null, { status: 0, statusText: "" });
-        response[INTERNALS2].type = "error";
-        return response;
-      }
-      static json(data = void 0, init = {}) {
-        const body = JSON.stringify(data);
-        if (body === void 0) {
-          throw new TypeError("data is not JSON serializable");
-        }
-        const headers = new Headers(init && init.headers);
-        if (!headers.has("content-type")) {
-          headers.set("content-type", "application/json");
-        }
-        return new _Response(body, __spreadProps(__spreadValues({}, init), {
-          headers
-        }));
-      }
-      get [Symbol.toStringTag]() {
-        return "Response";
-      }
+    }
+    this[INTERNALS2] = {
+      type: "default",
+      url: options.url,
+      status,
+      statusText: options.statusText || "",
+      headers,
+      counter: options.counter,
+      highWaterMark: options.highWaterMark
     };
-    Object.defineProperties(Response.prototype, {
-      type: { enumerable: true },
-      url: { enumerable: true },
-      status: { enumerable: true },
-      ok: { enumerable: true },
-      redirected: { enumerable: true },
-      statusText: { enumerable: true },
-      headers: { enumerable: true },
-      clone: { enumerable: true }
+  }
+  get type() {
+    return this[INTERNALS2].type;
+  }
+  get url() {
+    return this[INTERNALS2].url || "";
+  }
+  get status() {
+    return this[INTERNALS2].status;
+  }
+  /**
+   * Convenience property representing if the request ended normally
+   */
+  get ok() {
+    return this[INTERNALS2].status >= 200 && this[INTERNALS2].status < 300;
+  }
+  get redirected() {
+    return this[INTERNALS2].counter > 0;
+  }
+  get statusText() {
+    return this[INTERNALS2].statusText;
+  }
+  get headers() {
+    return this[INTERNALS2].headers;
+  }
+  get highWaterMark() {
+    return this[INTERNALS2].highWaterMark;
+  }
+  /**
+   * Clone this response
+   *
+   * @return  Response
+   */
+  clone() {
+    return new _Response(clone(this, this.highWaterMark), {
+      type: this.type,
+      url: this.url,
+      status: this.status,
+      statusText: this.statusText,
+      headers: this.headers,
+      ok: this.ok,
+      redirected: this.redirected,
+      size: this.size,
+      highWaterMark: this.highWaterMark
     });
   }
+  /**
+   * @param {string} url    The URL that the new response is to originate from.
+   * @param {number} status An optional status code for the response (e.g., 302.)
+   * @returns {Response}    A Response object.
+   */
+  static redirect(url, status = 302) {
+    if (!isRedirect(status)) {
+      throw new RangeError('Failed to execute "redirect" on "response": Invalid status code');
+    }
+    return new _Response(null, {
+      headers: {
+        location: new URL(url).toString()
+      },
+      status
+    });
+  }
+  static error() {
+    const response = new _Response(null, { status: 0, statusText: "" });
+    response[INTERNALS2].type = "error";
+    return response;
+  }
+  static json(data = void 0, init = {}) {
+    const body = JSON.stringify(data);
+    if (body === void 0) {
+      throw new TypeError("data is not JSON serializable");
+    }
+    const headers = new Headers(init && init.headers);
+    if (!headers.has("content-type")) {
+      headers.set("content-type", "application/json");
+    }
+    return new _Response(body, __spreadProps(__spreadValues({}, init), {
+      headers
+    }));
+  }
+  get [Symbol.toStringTag]() {
+    return "Response";
+  }
+};
+Object.defineProperties(Response.prototype, {
+  type: { enumerable: true },
+  url: { enumerable: true },
+  status: { enumerable: true },
+  ok: { enumerable: true },
+  redirected: { enumerable: true },
+  statusText: { enumerable: true },
+  headers: { enumerable: true },
+  clone: { enumerable: true }
 });
 
+// ../../../node_modules/node-fetch/src/request.js
+import { format as formatUrl } from "node:url";
+import { deprecate as deprecate2 } from "node:util";
+
 // ../../../node_modules/node-fetch/src/utils/get-search.js
-var getSearch;
-var init_get_search = __esm({
-  "../../../node_modules/node-fetch/src/utils/get-search.js"() {
-    "use strict";
-    getSearch = (parsedURL) => {
-      if (parsedURL.search) {
-        return parsedURL.search;
-      }
-      const lastOffset = parsedURL.href.length - 1;
-      const hash = parsedURL.hash || (parsedURL.href[lastOffset] === "#" ? "#" : "");
-      return parsedURL.href[lastOffset - hash.length] === "?" ? "?" : "";
-    };
+var getSearch = (parsedURL) => {
+  if (parsedURL.search) {
+    return parsedURL.search;
   }
-});
+  const lastOffset = parsedURL.href.length - 1;
+  const hash = parsedURL.hash || (parsedURL.href[lastOffset] === "#" ? "#" : "");
+  return parsedURL.href[lastOffset - hash.length] === "?" ? "?" : "";
+};
 
 // ../../../node_modules/node-fetch/src/utils/referrer.js
 import { isIP } from "node:net";
@@ -6361,6 +6246,18 @@ function stripURLForUseAsAReferrer(url, originOnly = false) {
   }
   return url;
 }
+var ReferrerPolicy = /* @__PURE__ */ new Set([
+  "",
+  "no-referrer",
+  "no-referrer-when-downgrade",
+  "same-origin",
+  "origin",
+  "strict-origin",
+  "origin-when-cross-origin",
+  "strict-origin-when-cross-origin",
+  "unsafe-url"
+]);
+var DEFAULT_REFERRER_POLICY = "strict-origin-when-cross-origin";
 function validateReferrerPolicy(referrerPolicy) {
   if (!ReferrerPolicy.has(referrerPolicy)) {
     throw new TypeError(`Invalid referrerPolicy: ${referrerPolicy}`);
@@ -6469,251 +6366,211 @@ function parseReferrerPolicyFromHeader(headers) {
   }
   return policy;
 }
-var ReferrerPolicy, DEFAULT_REFERRER_POLICY;
-var init_referrer = __esm({
-  "../../../node_modules/node-fetch/src/utils/referrer.js"() {
-    "use strict";
-    ReferrerPolicy = /* @__PURE__ */ new Set([
-      "",
-      "no-referrer",
-      "no-referrer-when-downgrade",
-      "same-origin",
-      "origin",
-      "strict-origin",
-      "origin-when-cross-origin",
-      "strict-origin-when-cross-origin",
-      "unsafe-url"
-    ]);
-    DEFAULT_REFERRER_POLICY = "strict-origin-when-cross-origin";
-  }
-});
 
 // ../../../node_modules/node-fetch/src/request.js
-import { format as formatUrl } from "node:url";
-import { deprecate as deprecate2 } from "node:util";
-var INTERNALS3, isRequest, doBadDataWarn, Request, getNodeRequestOptions;
-var init_request = __esm({
-  "../../../node_modules/node-fetch/src/request.js"() {
-    "use strict";
-    init_headers();
-    init_body();
-    init_is();
-    init_get_search();
-    init_referrer();
-    INTERNALS3 = Symbol("Request internals");
-    isRequest = (object) => {
-      return typeof object === "object" && typeof object[INTERNALS3] === "object";
-    };
-    doBadDataWarn = deprecate2(
-      () => {
-      },
-      ".data is not a valid RequestInit property, use .body instead",
-      "https://github.com/node-fetch/node-fetch/issues/1000 (request)"
-    );
-    Request = class _Request extends Body {
-      constructor(input, init = {}) {
-        let parsedURL;
-        if (isRequest(input)) {
-          parsedURL = new URL(input.url);
-        } else {
-          parsedURL = new URL(input);
-          input = {};
-        }
-        if (parsedURL.username !== "" || parsedURL.password !== "") {
-          throw new TypeError(`${parsedURL} is an url with embedded credentials.`);
-        }
-        let method = init.method || input.method || "GET";
-        if (/^(delete|get|head|options|post|put)$/i.test(method)) {
-          method = method.toUpperCase();
-        }
-        if (!isRequest(init) && "data" in init) {
-          doBadDataWarn();
-        }
-        if ((init.body != null || isRequest(input) && input.body !== null) && (method === "GET" || method === "HEAD")) {
-          throw new TypeError("Request with GET/HEAD method cannot have body");
-        }
-        const inputBody = init.body ? init.body : isRequest(input) && input.body !== null ? clone(input) : null;
-        super(inputBody, {
-          size: init.size || input.size || 0
-        });
-        const headers = new Headers(init.headers || input.headers || {});
-        if (inputBody !== null && !headers.has("Content-Type")) {
-          const contentType = extractContentType(inputBody, this);
-          if (contentType) {
-            headers.set("Content-Type", contentType);
-          }
-        }
-        let signal = isRequest(input) ? input.signal : null;
-        if ("signal" in init) {
-          signal = init.signal;
-        }
-        if (signal != null && !isAbortSignal(signal)) {
-          throw new TypeError("Expected signal to be an instanceof AbortSignal or EventTarget");
-        }
-        let referrer = init.referrer == null ? input.referrer : init.referrer;
-        if (referrer === "") {
-          referrer = "no-referrer";
-        } else if (referrer) {
-          const parsedReferrer = new URL(referrer);
-          referrer = /^about:(\/\/)?client$/.test(parsedReferrer) ? "client" : parsedReferrer;
-        } else {
-          referrer = void 0;
-        }
-        this[INTERNALS3] = {
-          method,
-          redirect: init.redirect || input.redirect || "follow",
-          headers,
-          parsedURL,
-          signal,
-          referrer
-        };
-        this.follow = init.follow === void 0 ? input.follow === void 0 ? 20 : input.follow : init.follow;
-        this.compress = init.compress === void 0 ? input.compress === void 0 ? true : input.compress : init.compress;
-        this.counter = init.counter || input.counter || 0;
-        this.agent = init.agent || input.agent;
-        this.highWaterMark = init.highWaterMark || input.highWaterMark || 16384;
-        this.insecureHTTPParser = init.insecureHTTPParser || input.insecureHTTPParser || false;
-        this.referrerPolicy = init.referrerPolicy || input.referrerPolicy || "";
-      }
-      /** @returns {string} */
-      get method() {
-        return this[INTERNALS3].method;
-      }
-      /** @returns {string} */
-      get url() {
-        return formatUrl(this[INTERNALS3].parsedURL);
-      }
-      /** @returns {Headers} */
-      get headers() {
-        return this[INTERNALS3].headers;
-      }
-      get redirect() {
-        return this[INTERNALS3].redirect;
-      }
-      /** @returns {AbortSignal} */
-      get signal() {
-        return this[INTERNALS3].signal;
-      }
-      // https://fetch.spec.whatwg.org/#dom-request-referrer
-      get referrer() {
-        if (this[INTERNALS3].referrer === "no-referrer") {
-          return "";
-        }
-        if (this[INTERNALS3].referrer === "client") {
-          return "about:client";
-        }
-        if (this[INTERNALS3].referrer) {
-          return this[INTERNALS3].referrer.toString();
-        }
-        return void 0;
-      }
-      get referrerPolicy() {
-        return this[INTERNALS3].referrerPolicy;
-      }
-      set referrerPolicy(referrerPolicy) {
-        this[INTERNALS3].referrerPolicy = validateReferrerPolicy(referrerPolicy);
-      }
-      /**
-       * Clone this request
-       *
-       * @return  Request
-       */
-      clone() {
-        return new _Request(this);
-      }
-      get [Symbol.toStringTag]() {
-        return "Request";
-      }
-    };
-    Object.defineProperties(Request.prototype, {
-      method: { enumerable: true },
-      url: { enumerable: true },
-      headers: { enumerable: true },
-      redirect: { enumerable: true },
-      clone: { enumerable: true },
-      signal: { enumerable: true },
-      referrer: { enumerable: true },
-      referrerPolicy: { enumerable: true }
+var INTERNALS3 = Symbol("Request internals");
+var isRequest = (object) => {
+  return typeof object === "object" && typeof object[INTERNALS3] === "object";
+};
+var doBadDataWarn = deprecate2(
+  () => {
+  },
+  ".data is not a valid RequestInit property, use .body instead",
+  "https://github.com/node-fetch/node-fetch/issues/1000 (request)"
+);
+var Request = class _Request extends Body {
+  constructor(input, init = {}) {
+    let parsedURL;
+    if (isRequest(input)) {
+      parsedURL = new URL(input.url);
+    } else {
+      parsedURL = new URL(input);
+      input = {};
+    }
+    if (parsedURL.username !== "" || parsedURL.password !== "") {
+      throw new TypeError(`${parsedURL} is an url with embedded credentials.`);
+    }
+    let method = init.method || input.method || "GET";
+    if (/^(delete|get|head|options|post|put)$/i.test(method)) {
+      method = method.toUpperCase();
+    }
+    if (!isRequest(init) && "data" in init) {
+      doBadDataWarn();
+    }
+    if ((init.body != null || isRequest(input) && input.body !== null) && (method === "GET" || method === "HEAD")) {
+      throw new TypeError("Request with GET/HEAD method cannot have body");
+    }
+    const inputBody = init.body ? init.body : isRequest(input) && input.body !== null ? clone(input) : null;
+    super(inputBody, {
+      size: init.size || input.size || 0
     });
-    getNodeRequestOptions = (request) => {
-      const { parsedURL } = request[INTERNALS3];
-      const headers = new Headers(request[INTERNALS3].headers);
-      if (!headers.has("Accept")) {
-        headers.set("Accept", "*/*");
+    const headers = new Headers(init.headers || input.headers || {});
+    if (inputBody !== null && !headers.has("Content-Type")) {
+      const contentType = extractContentType(inputBody, this);
+      if (contentType) {
+        headers.set("Content-Type", contentType);
       }
-      let contentLengthValue = null;
-      if (request.body === null && /^(post|put)$/i.test(request.method)) {
-        contentLengthValue = "0";
-      }
-      if (request.body !== null) {
-        const totalBytes = getTotalBytes(request);
-        if (typeof totalBytes === "number" && !Number.isNaN(totalBytes)) {
-          contentLengthValue = String(totalBytes);
-        }
-      }
-      if (contentLengthValue) {
-        headers.set("Content-Length", contentLengthValue);
-      }
-      if (request.referrerPolicy === "") {
-        request.referrerPolicy = DEFAULT_REFERRER_POLICY;
-      }
-      if (request.referrer && request.referrer !== "no-referrer") {
-        request[INTERNALS3].referrer = determineRequestsReferrer(request);
-      } else {
-        request[INTERNALS3].referrer = "no-referrer";
-      }
-      if (request[INTERNALS3].referrer instanceof URL) {
-        headers.set("Referer", request.referrer);
-      }
-      if (!headers.has("User-Agent")) {
-        headers.set("User-Agent", "node-fetch");
-      }
-      if (request.compress && !headers.has("Accept-Encoding")) {
-        headers.set("Accept-Encoding", "gzip, deflate, br");
-      }
-      let { agent } = request;
-      if (typeof agent === "function") {
-        agent = agent(parsedURL);
-      }
-      const search = getSearch(parsedURL);
-      const options = {
-        // Overwrite search to retain trailing ? (issue #776)
-        path: parsedURL.pathname + search,
-        // The following options are not expressed in the URL
-        method: request.method,
-        headers: headers[Symbol.for("nodejs.util.inspect.custom")](),
-        insecureHTTPParser: request.insecureHTTPParser,
-        agent
-      };
-      return {
-        /** @type {URL} */
-        parsedURL,
-        options
-      };
+    }
+    let signal = isRequest(input) ? input.signal : null;
+    if ("signal" in init) {
+      signal = init.signal;
+    }
+    if (signal != null && !isAbortSignal(signal)) {
+      throw new TypeError("Expected signal to be an instanceof AbortSignal or EventTarget");
+    }
+    let referrer = init.referrer == null ? input.referrer : init.referrer;
+    if (referrer === "") {
+      referrer = "no-referrer";
+    } else if (referrer) {
+      const parsedReferrer = new URL(referrer);
+      referrer = /^about:(\/\/)?client$/.test(parsedReferrer) ? "client" : parsedReferrer;
+    } else {
+      referrer = void 0;
+    }
+    this[INTERNALS3] = {
+      method,
+      redirect: init.redirect || input.redirect || "follow",
+      headers,
+      parsedURL,
+      signal,
+      referrer
     };
+    this.follow = init.follow === void 0 ? input.follow === void 0 ? 20 : input.follow : init.follow;
+    this.compress = init.compress === void 0 ? input.compress === void 0 ? true : input.compress : init.compress;
+    this.counter = init.counter || input.counter || 0;
+    this.agent = init.agent || input.agent;
+    this.highWaterMark = init.highWaterMark || input.highWaterMark || 16384;
+    this.insecureHTTPParser = init.insecureHTTPParser || input.insecureHTTPParser || false;
+    this.referrerPolicy = init.referrerPolicy || input.referrerPolicy || "";
   }
+  /** @returns {string} */
+  get method() {
+    return this[INTERNALS3].method;
+  }
+  /** @returns {string} */
+  get url() {
+    return formatUrl(this[INTERNALS3].parsedURL);
+  }
+  /** @returns {Headers} */
+  get headers() {
+    return this[INTERNALS3].headers;
+  }
+  get redirect() {
+    return this[INTERNALS3].redirect;
+  }
+  /** @returns {AbortSignal} */
+  get signal() {
+    return this[INTERNALS3].signal;
+  }
+  // https://fetch.spec.whatwg.org/#dom-request-referrer
+  get referrer() {
+    if (this[INTERNALS3].referrer === "no-referrer") {
+      return "";
+    }
+    if (this[INTERNALS3].referrer === "client") {
+      return "about:client";
+    }
+    if (this[INTERNALS3].referrer) {
+      return this[INTERNALS3].referrer.toString();
+    }
+    return void 0;
+  }
+  get referrerPolicy() {
+    return this[INTERNALS3].referrerPolicy;
+  }
+  set referrerPolicy(referrerPolicy) {
+    this[INTERNALS3].referrerPolicy = validateReferrerPolicy(referrerPolicy);
+  }
+  /**
+   * Clone this request
+   *
+   * @return  Request
+   */
+  clone() {
+    return new _Request(this);
+  }
+  get [Symbol.toStringTag]() {
+    return "Request";
+  }
+};
+Object.defineProperties(Request.prototype, {
+  method: { enumerable: true },
+  url: { enumerable: true },
+  headers: { enumerable: true },
+  redirect: { enumerable: true },
+  clone: { enumerable: true },
+  signal: { enumerable: true },
+  referrer: { enumerable: true },
+  referrerPolicy: { enumerable: true }
 });
+var getNodeRequestOptions = (request) => {
+  const { parsedURL } = request[INTERNALS3];
+  const headers = new Headers(request[INTERNALS3].headers);
+  if (!headers.has("Accept")) {
+    headers.set("Accept", "*/*");
+  }
+  let contentLengthValue = null;
+  if (request.body === null && /^(post|put)$/i.test(request.method)) {
+    contentLengthValue = "0";
+  }
+  if (request.body !== null) {
+    const totalBytes = getTotalBytes(request);
+    if (typeof totalBytes === "number" && !Number.isNaN(totalBytes)) {
+      contentLengthValue = String(totalBytes);
+    }
+  }
+  if (contentLengthValue) {
+    headers.set("Content-Length", contentLengthValue);
+  }
+  if (request.referrerPolicy === "") {
+    request.referrerPolicy = DEFAULT_REFERRER_POLICY;
+  }
+  if (request.referrer && request.referrer !== "no-referrer") {
+    request[INTERNALS3].referrer = determineRequestsReferrer(request);
+  } else {
+    request[INTERNALS3].referrer = "no-referrer";
+  }
+  if (request[INTERNALS3].referrer instanceof URL) {
+    headers.set("Referer", request.referrer);
+  }
+  if (!headers.has("User-Agent")) {
+    headers.set("User-Agent", "node-fetch");
+  }
+  if (request.compress && !headers.has("Accept-Encoding")) {
+    headers.set("Accept-Encoding", "gzip, deflate, br");
+  }
+  let { agent } = request;
+  if (typeof agent === "function") {
+    agent = agent(parsedURL);
+  }
+  const search = getSearch(parsedURL);
+  const options = {
+    // Overwrite search to retain trailing ? (issue #776)
+    path: parsedURL.pathname + search,
+    // The following options are not expressed in the URL
+    method: request.method,
+    headers: headers[Symbol.for("nodejs.util.inspect.custom")](),
+    insecureHTTPParser: request.insecureHTTPParser,
+    agent
+  };
+  return {
+    /** @type {URL} */
+    parsedURL,
+    options
+  };
+};
 
 // ../../../node_modules/node-fetch/src/errors/abort-error.js
-var AbortError;
-var init_abort_error = __esm({
-  "../../../node_modules/node-fetch/src/errors/abort-error.js"() {
-    "use strict";
-    init_base();
-    AbortError = class extends FetchBaseError {
-      constructor(message, type = "aborted") {
-        super(message, type);
-      }
-    };
+var AbortError = class extends FetchBaseError {
+  constructor(message, type = "aborted") {
+    super(message, type);
   }
-});
+};
 
 // ../../../node_modules/node-fetch/src/index.js
-import http2 from "node:http";
-import https from "node:https";
-import zlib from "node:zlib";
-import Stream2, { PassThrough as PassThrough2, pipeline as pump } from "node:stream";
-import { Buffer as Buffer3 } from "node:buffer";
+init_esm_min();
+init_from();
+var supportedSchemas = /* @__PURE__ */ new Set(["data:", "http:", "https:"]);
 function fetch2(url, options_) {
   return __async(this, null, function* () {
     return new Promise((resolve, reject) => {
@@ -6977,159 +6834,216 @@ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
     });
   });
 }
-var supportedSchemas;
-var init_src = __esm({
-  "../../../node_modules/node-fetch/src/index.js"() {
-    "use strict";
-    init_dist();
-    init_body();
-    init_response();
-    init_headers();
-    init_request();
-    init_fetch_error();
-    init_abort_error();
-    init_is_redirect();
-    init_esm_min();
-    init_is();
-    init_referrer();
-    init_from();
-    supportedSchemas = /* @__PURE__ */ new Set(["data:", "http:", "https:"]);
-  }
-});
 
 // src/cli/uploadTranslationContent.ts
-var uploadTranslationContent;
-var init_uploadTranslationContent = __esm({
-  "src/cli/uploadTranslationContent.ts"() {
-    "use strict";
-    init_src();
-    uploadTranslationContent = (_0) => __async(void 0, [_0], function* ({
-      apiKey,
-      targetLanguage,
-      content: content2
-    }) {
-      try {
-        const response = yield fetch2(
-          "https://api.translatesheet.co/translations/upload-primary-language",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              apiKey,
-              targetLanguage,
-              content: content2
-            })
-          }
-        );
-        if (!response.ok) {
-          const error = yield response.json();
-          console.error(
-            "\u274C Failed to upload primary language translations via backend:",
-            error
-          );
-          throw new Error(`Backend upload failed: ${response.statusText}`);
-        }
-        console.log("\u{1F4BE} Successfully uploaded translations to backend.");
-      } catch (err) {
-        console.error(
-          "\u274C Error sending primary language translations to backend:",
-          err
-        );
-        throw err;
+var uploadTranslationContent = (_0) => __async(void 0, [_0], function* ({
+  apiKey,
+  targetLanguage,
+  content: content2
+}) {
+  try {
+    const response = yield fetch2(
+      "https://api.translatesheet.co/translations/upload-primary-language",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          apiKey,
+          targetLanguage,
+          content: content2
+        })
       }
-    });
+    );
+    if (!response.ok) {
+      const error = yield response.json();
+      console.error(
+        "\u274C Failed to upload primary language translations via backend:",
+        error
+      );
+      throw new Error(`Backend upload failed: ${response.statusText}`);
+    }
+    console.log("\u{1F4BE} Successfully uploaded translations to backend.");
+  } catch (err) {
+    console.error(
+      "\u274C Error sending primary language translations to backend:",
+      err
+    );
+    throw err;
   }
 });
 
-// src/cli/index.ts
-import { program } from "commander";
-var require_cli = __commonJS({
-  "src/cli/index.ts"(exports) {
-    init_loadConfig();
-    init_extractTranslations();
-    init_generatePrimaryLanguageFile();
-    init_requestTranslations();
-    init_detectDuplicateNamespaces();
-    init_uploadTranslationContent();
-    program.command("generate").option("--output <output>", "Output directory", void 0).option("--primaryLanguage <primaryLanguage>", "Primary language", void 0).option(
-      "--languages <languages>",
-      "Comma-separated list of target languages",
-      void 0
-    ).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option(
-      "--config <config>",
-      "Path to configuration file",
-      "./translateSheetConfig.js"
-    ).option("--projectId <projectId>", "TranslateSheet Project Id", void 0).action((cmd) => __async(exports, null, function* () {
-      const {
-        output,
-        primaryLanguage,
-        languages,
-        apiKey,
-        // projectId,
-        fileExtension,
-        config: configPath
-      } = cmd;
-      const config = loadConfig_default(configPath);
-      const mergedConfig = {
-        output: output || config.output || "./i18n",
-        primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
-        languages: (languages == null ? void 0 : languages.split(",").map((lang) => lang.trim())) || config.languages || [],
-        fileExtension: fileExtension || config.fileExtension || ".ts",
-        apiKey: apiKey || config.apiKey
-      };
-      const {
+// src/cli/generateCommand.ts
+function createGenerateCommand() {
+  const generateCmd = new Command("generate").option("--output <output>", "Output directory", void 0).option("--primaryLanguage <primaryLanguage>", "Primary language", void 0).option("--languages <languages>", "Comma-separated list of target languages", void 0).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option("--config <config>", "Path to configuration file", "./translateSheetConfig.js").option("--projectId <projectId>", "TranslateSheet Project Id", void 0).action((cmd) => __async(this, null, function* () {
+    const {
+      output,
+      primaryLanguage,
+      languages,
+      apiKey,
+      fileExtension,
+      config: configPath
+    } = cmd;
+    const config = loadConfig_default(configPath);
+    const mergedConfig = {
+      output: output || config.output || "./i18n",
+      primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
+      languages: (languages == null ? void 0 : languages.split(",").map((lang) => lang.trim())) || config.languages || [],
+      fileExtension: fileExtension || config.fileExtension || ".ts",
+      apiKey: apiKey || config.apiKey
+    };
+    const {
+      output: finalOutput,
+      primaryLanguage: finalPrimaryLanguage,
+      languages: finalLanguages,
+      fileExtension: finalExtension,
+      apiKey: finalApiKey
+    } = mergedConfig;
+    console.log("Extracting translations...");
+    const primaryLanguageContent = extractTranslations_default();
+    detectDuplicateNamespaces_default(primaryLanguageContent);
+    try {
+      yield uploadTranslationContent({
+        apiKey: finalApiKey,
+        targetLanguage: finalPrimaryLanguage,
+        content: primaryLanguageContent
+      });
+    } catch (err) {
+      console.error(
+        "\u274C Failed to upload primary language translations to backend:",
+        err
+      );
+      process.exit(1);
+    }
+    generatePrimaryLanguageFile_default({
+      output: finalOutput,
+      primaryLanguageContent,
+      fileExtension: finalExtension,
+      primaryLanguage: finalPrimaryLanguage
+    });
+    if (finalLanguages.length > 0) {
+      if (!finalApiKey) {
+        console.error("API key is required. Provide it via config or CLI options.");
+        process.exit(1);
+      }
+      console.log("Generating translations for target languages...");
+      yield requestTranslations_default({
         output: finalOutput,
+        primaryLanguageContent,
         primaryLanguage: finalPrimaryLanguage,
         languages: finalLanguages,
         fileExtension: finalExtension,
         apiKey: finalApiKey
-      } = mergedConfig;
-      console.log("Extracting translations...");
-      const primaryLanguageContent = extractTranslations_default();
-      detectDuplicateNamespaces_default(primaryLanguageContent);
-      try {
-        yield uploadTranslationContent({
-          apiKey: finalApiKey,
-          targetLanguage: finalPrimaryLanguage,
-          content: primaryLanguageContent
-        });
-      } catch (err) {
-        console.error(
-          "\u274C Failed to upload primary language translations to backend:",
-          err
-        );
-        process.exit(1);
-      }
-      generatePrimaryLanguageFile_default({
-        output: finalOutput,
-        primaryLanguageContent,
-        fileExtension: finalExtension,
-        primaryLanguage: finalPrimaryLanguage
       });
-      if (finalLanguages.length > 0) {
-        if (!finalApiKey) {
-          console.error(
-            "API key is required. Provide it via config or CLI options."
-          );
-          process.exit(1);
-        }
-        console.log("Generating translations for target languages...");
-        yield requestTranslations_default({
-          output: finalOutput,
-          primaryLanguageContent,
-          primaryLanguage: finalPrimaryLanguage,
-          languages: finalLanguages,
-          fileExtension: finalExtension,
-          apiKey: finalApiKey
-        });
+    }
+  }));
+  return generateCmd;
+}
+
+// src/cli/pullCommand.ts
+import { Command as Command2 } from "commander";
+
+// src/cli/pullTranslationContent.ts
+var pullTranslationContent = (_0) => __async(void 0, [_0], function* ({
+  apiKey
+}) {
+  try {
+    const response = yield fetch2(
+      "https://api.translatesheet.co/translations/pull-translations",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          apiKey
+        })
       }
-    }));
-    program.parse(process.argv);
+    );
+    if (!response.ok) {
+      const errorResponse = yield response.json().catch(() => null);
+      console.error(
+        "\u274C Failed to pull translations via backend:",
+        errorResponse
+      );
+      throw new Error(`Backend pull failed: ${response.statusText}`);
+    }
+    const resData = yield response.json();
+    if (!resData.success) {
+      console.error("\u274C Backend reported an unsuccessful pull:", resData);
+      throw new Error("Pull translations request was not successful.");
+    }
+    console.log("\u2705 Successfully pulled translations from backend.");
+    return resData.data;
+  } catch (err) {
+    console.error("\u274C Error pulling translations from backend:", err);
+    throw err;
   }
 });
-export default require_cli();
+
+// src/cli/writeTranslationFiles.ts
+import fs5 from "fs";
+import path5 from "path";
+function writeTranslationFiles({
+  translationsByLang,
+  output,
+  fileExtension
+}) {
+  for (const [lang, content2] of Object.entries(translationsByLang)) {
+    const formattedContent = formatTranslatedContent_default({
+      fileExtension,
+      translatedContent: content2,
+      targetLanguage: lang
+    });
+    const filePath2 = path5.join(output, `${lang}${fileExtension}`);
+    fs5.writeFileSync(filePath2, formattedContent, "utf-8");
+    console.log(`\u2705 Wrote ${filePath2}`);
+  }
+}
+
+// src/cli/pullCommand.ts
+function createPullCommand() {
+  const pullCmd = new Command2("pull").description("Pull the latest translations from the server and write them to your local project").option("--output <output>", "Directory to write the pulled translations", void 0).option("--primaryLanguage <primaryLanguage>", "Primary language", void 0).option("--languages <languages>", "Comma-separated list of target languages", void 0).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option("--config <config>", "Path to configuration file", "./translateSheetConfig.js").option("--projectId <projectId>", "TranslateSheet Project Id", void 0).action((cmd) => __async(this, null, function* () {
+    const {
+      output,
+      primaryLanguage,
+      languages,
+      apiKey,
+      fileExtension,
+      config: configPath
+    } = cmd;
+    const config = loadConfig_default(configPath);
+    const mergedConfig = {
+      output: output || config.output || "./i18n",
+      primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
+      languages: (languages == null ? void 0 : languages.split(",").map((lang) => lang.trim())) || config.languages || [],
+      fileExtension: fileExtension || config.fileExtension || ".ts",
+      apiKey: apiKey || config.apiKey
+    };
+    console.log("Pulling translations from server...");
+    try {
+      const translationsByLang = yield pullTranslationContent({
+        apiKey: mergedConfig.apiKey
+      });
+      writeTranslationFiles({
+        translationsByLang,
+        output: mergedConfig.output,
+        fileExtension: mergedConfig.fileExtension
+      });
+      console.log("\u2728 Pull complete!");
+    } catch (err) {
+      console.error("\u274C Error pulling translations:", err);
+      process.exit(1);
+    }
+  }));
+  return pullCmd;
+}
+
+// src/cli/index.ts
+program.addCommand(createGenerateCommand());
+program.addCommand(createPullCommand());
+program.parse(process.argv);
 /*! Bundled license information:
 
 web-streams-polyfill/dist/ponyfill.es2018.js:

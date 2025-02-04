@@ -5241,6 +5241,9 @@ var init_multipart_parser = __esm({
 });
 
 // src/cli/index.ts
+var import_commander3 = require("commander");
+
+// src/cli/generateCommand.ts
 var import_commander = require("commander");
 
 // src/cli/loadConfig.ts
@@ -6867,81 +6870,176 @@ var uploadTranslationContent = (_0) => __async(void 0, [_0], function* ({
   }
 });
 
-// src/cli/index.ts
-import_commander.program.command("generate").option("--output <output>", "Output directory", void 0).option("--primaryLanguage <primaryLanguage>", "Primary language", void 0).option(
-  "--languages <languages>",
-  "Comma-separated list of target languages",
-  void 0
-).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option(
-  "--config <config>",
-  "Path to configuration file",
-  "./translateSheetConfig.js"
-).option("--projectId <projectId>", "TranslateSheet Project Id", void 0).action((cmd) => __async(exports, null, function* () {
-  const {
-    output,
-    primaryLanguage,
-    languages,
-    apiKey,
-    // projectId,
-    fileExtension,
-    config: configPath
-  } = cmd;
-  const config = loadConfig_default(configPath);
-  const mergedConfig = {
-    output: output || config.output || "./i18n",
-    primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
-    languages: (languages == null ? void 0 : languages.split(",").map((lang) => lang.trim())) || config.languages || [],
-    fileExtension: fileExtension || config.fileExtension || ".ts",
-    apiKey: apiKey || config.apiKey
-  };
-  const {
-    output: finalOutput,
-    primaryLanguage: finalPrimaryLanguage,
-    languages: finalLanguages,
-    fileExtension: finalExtension,
-    apiKey: finalApiKey
-  } = mergedConfig;
-  console.log("Extracting translations...");
-  const primaryLanguageContent = extractTranslations_default();
-  detectDuplicateNamespaces_default(primaryLanguageContent);
-  try {
-    yield uploadTranslationContent({
-      apiKey: finalApiKey,
-      targetLanguage: finalPrimaryLanguage,
-      content: primaryLanguageContent
-    });
-  } catch (err) {
-    console.error(
-      "\u274C Failed to upload primary language translations to backend:",
-      err
-    );
-    process.exit(1);
-  }
-  generatePrimaryLanguageFile_default({
-    output: finalOutput,
-    primaryLanguageContent,
-    fileExtension: finalExtension,
-    primaryLanguage: finalPrimaryLanguage
-  });
-  if (finalLanguages.length > 0) {
-    if (!finalApiKey) {
-      console.error(
-        "API key is required. Provide it via config or CLI options."
-      );
-      process.exit(1);
-    }
-    console.log("Generating translations for target languages...");
-    yield requestTranslations_default({
+// src/cli/generateCommand.ts
+function createGenerateCommand() {
+  const generateCmd = new import_commander.Command("generate").option("--output <output>", "Output directory", void 0).option("--primaryLanguage <primaryLanguage>", "Primary language", void 0).option("--languages <languages>", "Comma-separated list of target languages", void 0).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option("--config <config>", "Path to configuration file", "./translateSheetConfig.js").option("--projectId <projectId>", "TranslateSheet Project Id", void 0).action((cmd) => __async(this, null, function* () {
+    const {
+      output,
+      primaryLanguage,
+      languages,
+      apiKey,
+      fileExtension,
+      config: configPath
+    } = cmd;
+    const config = loadConfig_default(configPath);
+    const mergedConfig = {
+      output: output || config.output || "./i18n",
+      primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
+      languages: (languages == null ? void 0 : languages.split(",").map((lang) => lang.trim())) || config.languages || [],
+      fileExtension: fileExtension || config.fileExtension || ".ts",
+      apiKey: apiKey || config.apiKey
+    };
+    const {
       output: finalOutput,
-      primaryLanguageContent,
       primaryLanguage: finalPrimaryLanguage,
       languages: finalLanguages,
       fileExtension: finalExtension,
       apiKey: finalApiKey
+    } = mergedConfig;
+    console.log("Extracting translations...");
+    const primaryLanguageContent = extractTranslations_default();
+    detectDuplicateNamespaces_default(primaryLanguageContent);
+    try {
+      yield uploadTranslationContent({
+        apiKey: finalApiKey,
+        targetLanguage: finalPrimaryLanguage,
+        content: primaryLanguageContent
+      });
+    } catch (err) {
+      console.error(
+        "\u274C Failed to upload primary language translations to backend:",
+        err
+      );
+      process.exit(1);
+    }
+    generatePrimaryLanguageFile_default({
+      output: finalOutput,
+      primaryLanguageContent,
+      fileExtension: finalExtension,
+      primaryLanguage: finalPrimaryLanguage
     });
+    if (finalLanguages.length > 0) {
+      if (!finalApiKey) {
+        console.error("API key is required. Provide it via config or CLI options.");
+        process.exit(1);
+      }
+      console.log("Generating translations for target languages...");
+      yield requestTranslations_default({
+        output: finalOutput,
+        primaryLanguageContent,
+        primaryLanguage: finalPrimaryLanguage,
+        languages: finalLanguages,
+        fileExtension: finalExtension,
+        apiKey: finalApiKey
+      });
+    }
+  }));
+  return generateCmd;
+}
+
+// src/cli/pullCommand.ts
+var import_commander2 = require("commander");
+
+// src/cli/pullTranslationContent.ts
+var pullTranslationContent = (_0) => __async(void 0, [_0], function* ({
+  apiKey
+}) {
+  try {
+    const response = yield fetch2(
+      "https://api.translatesheet.co/translations/pull-translations",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          apiKey
+        })
+      }
+    );
+    if (!response.ok) {
+      const errorResponse = yield response.json().catch(() => null);
+      console.error(
+        "\u274C Failed to pull translations via backend:",
+        errorResponse
+      );
+      throw new Error(`Backend pull failed: ${response.statusText}`);
+    }
+    const resData = yield response.json();
+    if (!resData.success) {
+      console.error("\u274C Backend reported an unsuccessful pull:", resData);
+      throw new Error("Pull translations request was not successful.");
+    }
+    console.log("\u2705 Successfully pulled translations from backend.");
+    return resData.data;
+  } catch (err) {
+    console.error("\u274C Error pulling translations from backend:", err);
+    throw err;
   }
-}));
-import_commander.program.parse(process.argv);
+});
+
+// src/cli/writeTranslationFiles.ts
+var import_fs5 = __toESM(require("fs"));
+var import_path5 = __toESM(require("path"));
+function writeTranslationFiles({
+  translationsByLang,
+  output,
+  fileExtension
+}) {
+  for (const [lang, content2] of Object.entries(translationsByLang)) {
+    const formattedContent = formatTranslatedContent_default({
+      fileExtension,
+      translatedContent: content2,
+      targetLanguage: lang
+    });
+    const filePath2 = import_path5.default.join(output, `${lang}${fileExtension}`);
+    import_fs5.default.writeFileSync(filePath2, formattedContent, "utf-8");
+    console.log(`\u2705 Wrote ${filePath2}`);
+  }
+}
+
+// src/cli/pullCommand.ts
+function createPullCommand() {
+  const pullCmd = new import_commander2.Command("pull").description("Pull the latest translations from the server and write them to your local project").option("--output <output>", "Directory to write the pulled translations", void 0).option("--primaryLanguage <primaryLanguage>", "Primary language", void 0).option("--languages <languages>", "Comma-separated list of target languages", void 0).option("--fileExtension <fileExtension>", "File extension", void 0).option("--apiKey <apiKey>", "TranslateSheet API key", void 0).option("--config <config>", "Path to configuration file", "./translateSheetConfig.js").option("--projectId <projectId>", "TranslateSheet Project Id", void 0).action((cmd) => __async(this, null, function* () {
+    const {
+      output,
+      primaryLanguage,
+      languages,
+      apiKey,
+      fileExtension,
+      config: configPath
+    } = cmd;
+    const config = loadConfig_default(configPath);
+    const mergedConfig = {
+      output: output || config.output || "./i18n",
+      primaryLanguage: primaryLanguage || config.primaryLanguage || "en",
+      languages: (languages == null ? void 0 : languages.split(",").map((lang) => lang.trim())) || config.languages || [],
+      fileExtension: fileExtension || config.fileExtension || ".ts",
+      apiKey: apiKey || config.apiKey
+    };
+    console.log("Pulling translations from server...");
+    try {
+      const translationsByLang = yield pullTranslationContent({
+        apiKey: mergedConfig.apiKey
+      });
+      writeTranslationFiles({
+        translationsByLang,
+        output: mergedConfig.output,
+        fileExtension: mergedConfig.fileExtension
+      });
+      console.log("\u2728 Pull complete!");
+    } catch (err) {
+      console.error("\u274C Error pulling translations:", err);
+      process.exit(1);
+    }
+  }));
+  return pullCmd;
+}
+
+// src/cli/index.ts
+import_commander3.program.addCommand(createGenerateCommand());
+import_commander3.program.addCommand(createPullCommand());
+import_commander3.program.parse(process.argv);
 /*! Bundled license information:
 
 web-streams-polyfill/dist/ponyfill.es2018.js:

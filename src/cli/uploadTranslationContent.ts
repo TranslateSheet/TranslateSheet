@@ -13,7 +13,6 @@ export const uploadTranslationContent = async ({
   content: Record<string, any>;
 }): Promise<void> => {
   try {
-    // Make this endpoint "uploadPrimaryLanguage"
     const response = await fetch(
       "https://api.translatesheet.co/translations/upload-primary-language",
       {
