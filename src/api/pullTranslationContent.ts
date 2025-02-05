@@ -38,7 +38,8 @@ export const pullTranslationContent = async ({
       throw new Error(`Backend pull failed: ${response.statusText}`);
     }
 
-    const resData = await response.json();
+    // TODO: strict types
+    const resData: any = await response.json();
     if (!resData.success) {
       console.error("❌ Backend reported an unsuccessful pull:", resData);
       throw new Error("Pull translations request was not successful.");
