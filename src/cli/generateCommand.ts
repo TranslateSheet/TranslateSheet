@@ -1,11 +1,11 @@
 import { Command } from "commander";
 import loadConfig from "./loadConfig";
-import extractTranslations from "./extractTranslations";
-import generatePrimaryLanguageFile from "./generatePrimaryLanguageFile";
-import requestTranslations from "./requestTranslations";
+import extractTranslations from "../helpers/extractTranslations";
+import generatePrimaryLanguageFile from "../helpers/generatePrimaryLanguageFile";
+import requestTranslations from "../helpers/requestTranslations";
 import detectDuplicateNamespaces from "../helpers/detectDuplicateNamespaces";
 import { TranslateSheetConfig } from "../types";
-import { uploadTranslationContent } from "./uploadTranslationContent";
+import { uploadPrimaryLanguageContent } from "../api/uploadPrimaryLanguageContent";
 
 export function createGenerateCommand(): Command {
   const generateCmd = new Command("generate")
@@ -59,7 +59,7 @@ export function createGenerateCommand(): Command {
 
       try {
         // 5) Upload primary language translations
-        await uploadTranslationContent({
+        await uploadPrimaryLanguageContent({
           apiKey: finalApiKey,
           targetLanguage: finalPrimaryLanguage,
           content: primaryLanguageContent,

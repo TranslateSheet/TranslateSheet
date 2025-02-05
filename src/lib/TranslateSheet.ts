@@ -1,6 +1,6 @@
 import i18n, { TOptions } from "i18next";
 import useLanguageChange from "../lib/hooks/useLanguageChange";
-import languageChangeEmitter from "./languageChangeEmitter";
+import languageChangeEmitter from "./utils/languageChangeEmitter";
 import validateInterpolatedKeys from "../lib/utils/validateInterpolatedKeys";
 
 let globalI18nInitialized = false;

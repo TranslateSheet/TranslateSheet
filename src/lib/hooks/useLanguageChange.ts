@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import languageChangeEmitter from "../languageChangeEmitter";
+import languageChangeEmitter from "../utils/languageChangeEmitter";
 
 // Hook to force re-render on language change
 const useLanguageChange = () => {

@@ -1,7 +1,8 @@
 import { existsSync } from "fs";
 import path from "path";
 
-// TODO: fs and path are holding pack dynamic primary languages
+// TODO: fs and path are holding back dynamic primary languages
+// TODO: I think we can just use the primary language given to i18n init
 
 /**
  * Load TranslateSheet configuration from a file.

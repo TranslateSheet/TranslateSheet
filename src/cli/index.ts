@@ -8,8 +8,9 @@ import { createPullCommand } from "./pullCommand";
 program.addCommand(createGenerateCommand());
 program.addCommand(createPullCommand());
 
-/**
- * Command-line interface setup with Commander.
- */
+process.on("SIGINT", () => {
+  console.log(" Terminating translate-sheet execution");
+  process.exit(1);
+});
 
 program.parse(process.argv);

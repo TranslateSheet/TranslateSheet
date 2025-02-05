@@ -1,8 +1,8 @@
 import { Command } from "commander";
 import loadConfig from "./loadConfig";
 import { TranslateSheetConfig } from "../types";
-import { pullTranslationContent } from "./pullTranslationContent";
-import { writeTranslationFiles } from "./writeTranslationFiles";
+import { pullTranslationContent } from "../api/pullTranslationContent";
+import { writeTranslationFiles } from "../helpers/writeTranslationFiles";
 
 export function createPullCommand(): Command {
   const pullCmd = new Command("pull")

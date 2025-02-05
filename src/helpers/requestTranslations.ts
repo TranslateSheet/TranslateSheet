@@ -1,8 +1,8 @@
-import sendTranslationRequest from "./sendTranslationRequest";
+import sendTranslationRequest from "../api/sendTranslationRequest";
 import fs from "fs";
 import path from "path";
 import { TranslateSheetConfig } from "../types";
-import sanitizeLanguage from "../helpers/sanitizeLanguage";
+import sanitizeLanguage from "./sanitizeLanguage";
 import formatTranslatedContent from "./formatTranslatedContent";
 
 /**
@@ -70,7 +70,10 @@ const resources = {
 export default resources;
 `;
 
-  const indexFilePath = path.join(output, `resources${fileExtension}`);
+  const indexFilePath = path.join(
+    output,
+    `resources${fileExtension === ".ts" ? ".ts" : ".js"}`
+  );
   fs.writeFileSync(indexFilePath, indexContent, "utf-8");
   console.log(
     `📦 Generated resources${fileExtension} file with all translations: ${indexFilePath}`

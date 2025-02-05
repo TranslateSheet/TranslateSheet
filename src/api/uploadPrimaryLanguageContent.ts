@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 /**
  * Send primary language translations to the backend for storage and upsert.
  */
-export const uploadTranslationContent = async ({
+export const uploadPrimaryLanguageContent = async ({
   apiKey,
   targetLanguage,
   content,

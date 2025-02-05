@@ -57,7 +57,7 @@ var import_i18next = __toESM(require("i18next"));
 // src/lib/hooks/useLanguageChange.ts
 var import_react = require("react");
 
-// src/lib/languageChangeEmitter.ts
+// src/lib/utils/languageChangeEmitter.ts
 var languageChangeEmitter = {
   listeners: /* @__PURE__ */ new Set(),
   emit() {

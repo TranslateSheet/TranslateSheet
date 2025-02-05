@@ -24,7 +24,7 @@ import i18n from "i18next";
 // src/lib/hooks/useLanguageChange.ts
 import { useState, useEffect } from "react";
 
-// src/lib/languageChangeEmitter.ts
+// src/lib/utils/languageChangeEmitter.ts
 var languageChangeEmitter = {
   listeners: /* @__PURE__ */ new Set(),
   emit() {
