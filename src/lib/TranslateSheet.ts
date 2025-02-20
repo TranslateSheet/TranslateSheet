@@ -40,6 +40,8 @@ const TranslateSheet = {
           options?: Record<string, any>,
           additionalOptions?: TOptions
         ) => {
+          // TODO: this hook is in charge of forcing re-renders on a language change
+          // It is the reason why we cannot currently use TranslateSheet.create in a non-react environment
           useLanguageChange();
 
           // Validate interpolations
@@ -75,6 +77,7 @@ const TranslateSheet = {
       } else if (typeof value === "string") {
         Object.defineProperty(processedTranslations, key, {
           get: () => {
+            // TODO: same as above
             useLanguageChange();
 
             if (
