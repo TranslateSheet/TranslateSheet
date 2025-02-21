@@ -3,18 +3,29 @@ import loadConfig from "./loadConfig";
 import extractTranslations from "../helpers/extractTranslations";
 import generatePrimaryLanguageFile from "../helpers/generatePrimaryLanguageFile";
 import requestTranslations from "../helpers/requestTranslations";
-import detectDuplicateNamespaces from "../helpers/detectDuplicateNamespaces";
 import { TranslateSheetConfig } from "../types";
 import { uploadPrimaryLanguageContent } from "../api/uploadPrimaryLanguageContent";
 
 export function createGenerateCommand(): Command {
   const generateCmd = new Command("generate")
     .option("--output <output>", "Output directory", undefined)
-    .option("--primaryLanguage <primaryLanguage>", "Primary language", undefined)
-    .option("--languages <languages>", "Comma-separated list of target languages", undefined)
+    .option(
+      "--primaryLanguage <primaryLanguage>",
+      "Primary language",
+      undefined
+    )
+    .option(
+      "--languages <languages>",
+      "Comma-separated list of target languages",
+      undefined
+    )
     .option("--fileExtension <fileExtension>", "File extension", undefined)
     .option("--apiKey <apiKey>", "TranslateSheet API key", undefined)
-    .option("--config <config>", "Path to configuration file", "./translateSheetConfig.js")
+    .option(
+      "--config <config>",
+      "Path to configuration file",
+      "./translateSheetConfig.js"
+    )
     // TODO: available but not currently using
     .option("--projectId <projectId>", "TranslateSheet Project Id", undefined)
     .action(async (cmd) => {
@@ -54,9 +65,6 @@ export function createGenerateCommand(): Command {
       console.log("Extracting translations...");
       const primaryLanguageContent = extractTranslations();
 
-      // 4) Detect and throw an error on duplicate namespaces
-      detectDuplicateNamespaces(primaryLanguageContent);
-
       try {
         // 5) Upload primary language translations
         await uploadPrimaryLanguageContent({
@@ -83,7 +91,9 @@ export function createGenerateCommand(): Command {
       // 7) Generate translations for target languages
       if (finalLanguages.length > 0) {
         if (!finalApiKey) {
-          console.error("API key is required. Provide it via config or CLI options.");
+          console.error(
+            "API key is required. Provide it via config or CLI options."
+          );
           process.exit(1);
         }
 

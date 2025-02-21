@@ -7,11 +7,17 @@ import path from "path";
  * @returns {Record<string, any>} An object containing translations grouped by namespace.
  */
 const extractTranslations = (): Record<string, any> => {
-  const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}");
+  const projectRoot = path.resolve(".");
+  const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}", {
+    ignore: ["node_modules/**", "dist/**", "build/**"],
+  });
+
   const translations: Record<string, any> = {};
+  const seenKeysByNamespace = new Map<string, Map<string, string>>();
 
   files.forEach((file) => {
     const filePath = path.resolve(file);
+    const relativeFilePath = path.relative(projectRoot, filePath);
 
     // Skip directories
     if (fs.statSync(filePath).isDirectory()) {
@@ -28,8 +34,23 @@ const extractTranslations = (): Record<string, any> => {
 
       if (!translations[namespace]) {
         translations[namespace] = {};
+        seenKeysByNamespace.set(namespace, new Map());
       }
-      Object.assign(translations[namespace], translationObject);
+
+      const existingKeys = seenKeysByNamespace.get(namespace)!;
+
+      Object.entries(translationObject).forEach(([key, value]) => {
+        if (existingKeys.has(key)) {
+          console.error(
+            `[TranslateSheet] Duplicate key detected: "${namespace}.${key}"` +
+            `\n - First found in: ${existingKeys.get(key)}` +
+            `\n - Also found in: ${relativeFilePath}`
+          );
+          process.exit(1);
+        }
+        existingKeys.set(key, relativeFilePath);
+        translations[namespace][key] = value;
+      });
     }
   });
 

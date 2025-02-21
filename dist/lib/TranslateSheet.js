@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import useLanguageChange from "../lib/hooks/useLanguageChange";
-import languageChangeEmitter from "./languageChangeEmitter";
+import languageChangeEmitter from "./utils/languageChangeEmitter";
 import validateInterpolatedKeys from "../lib/utils/validateInterpolatedKeys";
 let globalI18nInitialized = false;
 i18n.on("initialized", () => {
@@ -21,6 +21,8 @@ const TranslateSheet = {
             if (typeof value === "string" && value.includes("{{")) {
                 processedTranslations[key] = (options, additionalOptions) => {
                     var _a, _b;
+                    // TODO: this hook is in charge of forcing re-renders on a language change
+                    // It is the reason why we cannot currently use TranslateSheet.create in a non-react environment
                     useLanguageChange();
                     // Validate interpolations
                     if (options) {
@@ -41,6 +43,7 @@ const TranslateSheet = {
                 Object.defineProperty(processedTranslations, key, {
                     get: () => {
                         var _a;
+                        // TODO: same as above
                         useLanguageChange();
                         if (!globalI18nInitialized ||
                             ((_a = i18n === null || i18n === void 0 ? void 0 : i18n.language) === null || _a === void 0 ? void 0 : _a.includes(primaryLanguage))) {
