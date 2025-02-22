@@ -6,7 +6,6 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup src/index.ts src/cli/index.ts --format cjs,esm --dts --out-dir dist --no-splitting --minify --no-sourcemap --target node18 && cd ./expo-example && bun install",
     "watch": "tsup src/index.ts src/cli/index.ts --format cjs,esm --dts --out-dir dist --no-splitting --watch",
     "prepublish": "npm version patch -m \"chore(release): %s\" && npm run build"
@@ -23,12 +22,12 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "react": ">=16.8.0",
-    "i18next": ">=23.0.0"
+    "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "react": "^18.0.0",
-    "@types/react": "^19.0.6"
+    "@types/bun": "latest",
+    "@types/react": "^19.0.6",
+    "react": "^18.0.0"
   },
   "dependencies": {
     "@types/node": "^22.10.1",
