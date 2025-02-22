@@ -4,7 +4,7 @@ import extractTranslations from "../helpers/extractTranslations";
 import generatePrimaryLanguageFile from "../helpers/generatePrimaryLanguageFile";
 import requestTranslations from "../helpers/requestTranslations";
 import { TranslateSheetConfig } from "../types";
-import { uploadPrimaryLanguageContent } from "../api/uploadPrimaryLanguageContent";
+import { uploadTranslationContent } from "../api/uploadTranslationContent";
 
 export function createGenerateCommand(): Command {
   const generateCmd = new Command("generate")
@@ -67,10 +67,11 @@ export function createGenerateCommand(): Command {
 
       try {
         // 5) Upload primary language translations
-        await uploadPrimaryLanguageContent({
+        await uploadTranslationContent({
           apiKey: finalApiKey,
           targetLanguage: finalPrimaryLanguage,
           content: primaryLanguageContent,
+          isPrimary: true,
         });
       } catch (err) {
         console.error(

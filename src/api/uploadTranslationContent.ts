@@ -3,18 +3,20 @@ import fetch from "node-fetch";
 /**
  * Send primary language translations to the backend for storage and upsert.
  */
-export const uploadPrimaryLanguageContent = async ({
+export const uploadTranslationContent = async ({
   apiKey,
   targetLanguage,
   content,
+  isPrimary,
 }: {
   apiKey: string;
   targetLanguage: string;
   content: Record<string, any>;
+  isPrimary: boolean;
 }): Promise<void> => {
   try {
     const response = await fetch(
-      "https://api.translatesheet.co/translations/upload-primary-language",
+      "https://api.translatesheet.co/translations/upload",
       {
         method: "POST",
         headers: {
@@ -24,6 +26,7 @@ export const uploadPrimaryLanguageContent = async ({
           apiKey,
           targetLanguage,
           content,
+          isPrimary,
         }),
       }
     );
