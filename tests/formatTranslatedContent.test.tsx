@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
-import { FileExtensions } from "../types";
-import formatTranslatedContent from "../helpers/formatTranslatedContent";
+import { FileExtensions } from "../src/types";
+import formatTranslatedContent from "../src/helpers/formatTranslatedContent";
 
 describe("formatTranslatedContent", () => {
   const mockTranslations = {

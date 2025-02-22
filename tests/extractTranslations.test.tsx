@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import fs from "fs";
 import path from "path";
-import extractTranslations from "../helpers/extractTranslations";
+import extractTranslations from "../src/helpers/extractTranslations";
 
 
 function ensureDirExists(dirPath: string) {

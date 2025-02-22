@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
-import formatAsJSON from "../helpers/formatAsJSON";
-import formatAsJavaScript from "../helpers/formatAsJavaScript";
-import formatAsTypeScript from "../helpers/formatAsTypeScript";
+import formatAsJSON from "../src/helpers/formatAsJSON";
+import formatAsJavaScript from "../src/helpers/formatAsJavaScript";
+import formatAsTypeScript from "../src/helpers/formatAsTypeScript";
 
 /**
  * Test object that includes a nested object, an array, and a key with a dash,
