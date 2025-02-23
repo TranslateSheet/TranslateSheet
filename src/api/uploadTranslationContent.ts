@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 
 /**
- * Send primary language translations to the backend for storage and upsert.
+ * Send language content to the backend for storage and upsert.
  */
 export const uploadTranslationContent = async ({
   apiKey,

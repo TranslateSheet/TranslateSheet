@@ -39,7 +39,7 @@ export function createGenerateCommand(): Command {
       } = cmd;
 
       // 1) Load configuration from file
-      const config = loadConfig(configPath);
+      const config = await loadConfig(configPath);
 
       // 2) Merge CLI options with config file values
       const mergedConfig: TranslateSheetConfig = {

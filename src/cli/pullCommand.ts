@@ -25,7 +25,7 @@ export function createPullCommand(): Command {
         config: configPath,
       } = cmd;
 
-      const config = loadConfig(configPath);
+      const config = await loadConfig(configPath);
 
       // 2) Merge config
       const mergedConfig: TranslateSheetConfig = {

@@ -1,6 +1,6 @@
 {
   "name": "translate-sheet",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "translations made easy",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -13,8 +13,7 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./cli": {
       "require": "./dist/cli/index.js"
@@ -22,22 +21,22 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "typescript": "^5.0.0",
     "react": ">=16.8.0",
     "i18next": ">=23.0.0"
   },
   "devDependencies": {
+    "typescript": "^5.0.0",
     "@types/bun": "latest",
-    "react": "^18.0.0",
     "@types/react": "^19.0.6",
-    "react-i18next": "^15.4.0"
-    
+    "react": "^18.0.0",
+    "react-i18next": "^15.4.0",
+    "ts-node": "^10.9.2",
+    "@types/node": "^22.10.1",
+    "tsup": "^8.3.6"
   },
   "dependencies": {
-    "@types/node": "^22.10.1",
     "commander": "^12.1.0",
-    "glob": "^11.0.0",
-    "tsup": "^8.3.6"
+    "glob": "^11.0.0"
   },
   "bin": {
     "translate-sheet": "./dist/cli/index.js"
