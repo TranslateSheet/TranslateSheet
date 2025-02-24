@@ -59,8 +59,7 @@ export function createPushCommand(): Command {
         console.error("❌ API key is required.");
         process.exit(1);
       }
-
-      // 3) For each language, build file path, load file, and upload its content.
+      // 3) For each language, build file path, load file, flatten the content, and upload its content.
       for (const lang of finalLanguages) {
         const filePath = `${finalOutput}/${lang}${finalExtension}`;
         console.log({ filePath });

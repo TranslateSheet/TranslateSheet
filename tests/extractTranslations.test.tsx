@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import extractTranslations from "../src/helpers/extractTranslations";
 
-
 function ensureDirExists(dirPath: string) {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -199,6 +198,35 @@ describe("extractTranslations", () => {
     const result = extractTranslations();
     expect(result).toEqual({
       realNamespace: { realKey: "realValue" },
+    });
+  });
+
+  it("should correctly flatten nested translation objects", () => {
+    setupTestDirWithFiles({
+      "nested.ts": `
+        TranslateSheet.create("nestedNamespace", {
+          header: "Header",
+          body: {
+            title: "Body Title",
+            description: "Body Description",
+            subSection: {
+              detail: "Detail text"
+            }
+          },
+          footer: "Footer"
+        });
+      `,
+    });
+
+    const result = extractTranslations();
+    expect(result).toEqual({
+      nestedNamespace: {
+        header: "Header",
+        "body.title": "Body Title",
+        "body.description": "Body Description",
+        "body.subSection.detail": "Detail text",
+        footer: "Footer",
+      },
     });
   });
 });

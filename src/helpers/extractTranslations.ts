@@ -1,6 +1,7 @@
 import * as glob from "glob";
 import fs from "fs";
 import path from "path";
+import { flattenTranslations } from "./flattenTranslation";
 
 /**
  * Extract translations from the codebase.
@@ -32,19 +33,21 @@ const extractTranslations = (): Record<string, any> => {
       const namespace = match[1];
       const translationObject = eval(`(${match[2]})`);
 
+      // Flatten the translation object to support nested keys
+      const flattenedTranslations = flattenTranslations(translationObject);
+
       if (!translations[namespace]) {
         translations[namespace] = {};
         seenKeysByNamespace.set(namespace, new Map());
       }
-
       const existingKeys = seenKeysByNamespace.get(namespace)!;
 
-      Object.entries(translationObject).forEach(([key, value]) => {
+      Object.entries(flattenedTranslations).forEach(([key, value]) => {
         if (existingKeys.has(key)) {
           console.error(
             `[TranslateSheet] Duplicate key detected: "${namespace}.${key}"` +
-            `\n - First found in: ${existingKeys.get(key)}` +
-            `\n - Also found in: ${relativeFilePath}`
+              `\n - First found in: ${existingKeys.get(key)}` +
+              `\n - Also found in: ${relativeFilePath}`
           );
           process.exit(1);
         }

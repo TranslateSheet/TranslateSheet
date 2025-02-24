@@ -118,4 +118,33 @@ describe("formatTranslatedContent", () => {
       })
     ).toThrow("Unsupported file extension: .txt");
   });
+
+  it("should re-nest flattened keys in JSON output", () => {
+    const flattenedTranslations = {
+      namespaceNested: {
+        "header.title": "Nested Title",
+        "header.subtitle": "Nested Subtitle",
+        "body.content": "Nested Content",
+        "body.footer.note": "Footer Note"
+      }
+    };
+
+    const result = formatTranslatedContent({
+      fileExtension: ".json" as FileExtensions,
+      translatedContent: flattenedTranslations,
+      targetLanguage: "en",
+      isPrimary: true,
+    });
+
+    let parsed;
+    expect(() => {
+      parsed = JSON.parse(result);
+    }).not.toThrow();
+
+    // Verify the re-nested structure
+    expect(parsed.namespaceNested.header.title).toBe("Nested Title");
+    expect(parsed.namespaceNested.header.subtitle).toBe("Nested Subtitle");
+    expect(parsed.namespaceNested.body.content).toBe("Nested Content");
+    expect(parsed.namespaceNested.body.footer.note).toBe("Footer Note");
+  });
 });
