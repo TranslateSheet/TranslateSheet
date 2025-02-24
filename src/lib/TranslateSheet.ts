@@ -3,27 +3,108 @@ import useLanguageChange from "../lib/hooks/useLanguageChange";
 import languageChangeEmitter from "./utils/languageChangeEmitter";
 import validateInterpolatedKeys from "../lib/utils/validateInterpolatedKeys";
 
-let globalI18nInitialized = false;
+// Recursive type transformation for nested translations
+type Translated<T> = {
+  [K in keyof T]: T[K] extends object
+    ? T[K] extends Function
+      ? T[K]
+      : Translated<T[K]>
+    : string & ((options?: Record<string, any>, additionalOptions?: TOptions) => string);
+};
 
+
+let globalI18nInitialized = false;
 i18n.on("initialized", () => {
   globalI18nInitialized = true;
 });
 
+const primaryLanguage = "en";
+
+// Recursive helper function to process translations
+function processTranslations(
+  namespace: string,
+  translations: any,
+  keyPrefix: string = "",
+  cachedValues: Map<string, string>
+): any {
+  const processed: Record<string, any> = {};
+
+  Object.keys(translations).forEach((key) => {
+    // Build full key path for nested objects (e.g. "accessibility.cardHint")
+    const fullKey = keyPrefix ? `${keyPrefix}.${key}` : key;
+    const value = translations[key];
+
+    if (typeof value === "string") {
+      if (value.includes("{{")) {
+        processed[key] = (
+          options?: Record<string, any>,
+          additionalOptions?: TOptions
+        ) => {
+          // Force re-render on language change in React components
+          useLanguageChange();
+
+          // Validate interpolations
+          if (options) {
+            validateInterpolatedKeys(value, options);
+          } else {
+            console.warn(
+              `[TranslateSheet] Missing interpolated values for key: "${namespace}:${fullKey}". Expected keys: ${
+                value.match(/\{\{(.*?)\}\}/g)?.map((k) => k.replace(/{{|}}/g, "")).join(", ") || "none"
+              }.`
+            );
+          }
+
+          if (!globalI18nInitialized || i18n?.language?.includes(primaryLanguage)) {
+            return value.replace(/\{\{(.*?)\}\}/g, (_, p1) => options?.[p1] ?? `{{ ${p1} }}`);
+          }
+
+          return i18n.t(`${namespace}:${fullKey}`, {
+            ...options,
+            ...additionalOptions,
+            defaultValue: value,
+          });
+        };
+      } else {
+        // Define a getter for static strings
+        Object.defineProperty(processed, key, {
+          get: () => {
+            useLanguageChange();
+
+            if (!globalI18nInitialized || i18n?.language?.includes(primaryLanguage)) {
+              return value;
+            }
+            if (cachedValues.has(fullKey)) {
+              return cachedValues.get(fullKey)!;
+            }
+            const translatedValue = i18n.t(`${namespace}:${fullKey}`, {
+              defaultValue: value,
+            });
+            cachedValues.set(fullKey, translatedValue);
+            return translatedValue;
+          },
+        });
+      }
+    } else if (typeof value === "object" && value !== null) {
+      // Recursively process nested objects
+      processed[key] = processTranslations(namespace, value, fullKey, cachedValues);
+    } else {
+      processed[key] = value;
+    }
+  });
+
+  return new Proxy(processed, {
+    get(target, key: string) {
+      const value = target[key];
+      return typeof value === "function" ? (...args: any[]) => value(...args) : value;
+    },
+  });
+}
+
 const TranslateSheet = {
-  create<T extends Record<string, string | ((...args: any[]) => string)>>(
+  create<T extends Record<string, any>>(
     namespace: string,
     translations: T
-  ): {
-    [K in keyof T]: T[K] extends (...args: any[]) => any
-      ? T[K]
-      : string &
-          ((
-            options?: Record<string, any>,
-            additionalOptions?: TOptions
-          ) => string);
-  } {
-    const primaryLanguage = "en";
-    const processedTranslations: Record<string, any> = {};
+  ): Translated<T> {
     const cachedValues = new Map<string, string>();
 
     // Clear cache on language change
@@ -32,95 +113,7 @@ const TranslateSheet = {
       languageChangeEmitter.emit();
     });
 
-    Object.keys(translations).forEach((key) => {
-      const value = translations[key];
-
-      if (typeof value === "string" && value.includes("{{")) {
-        processedTranslations[key] = (
-          options?: Record<string, any>,
-          additionalOptions?: TOptions
-        ) => {
-          // TODO: this hook is in charge of forcing re-renders on a language change
-          // It is the reason why we cannot currently use TranslateSheet.create in a non-react environment
-          useLanguageChange();
-
-          // Validate interpolations
-          if (options) {
-            validateInterpolatedKeys(value, options);
-          } else {
-            console.warn(
-              `[TranslateSheet] Missing interpolated values for key: "${namespace}:${key}". Expected keys: ${
-                value
-                  .match(/\{\{(.*?)\}\}/g)
-                  ?.map((k) => k.replace(/{{|}}/g, ""))
-                  .join(", ") || "none"
-              }.`
-            );
-          }
-
-          if (
-            !globalI18nInitialized ||
-            i18n?.language?.includes(primaryLanguage)
-          ) {
-            return value.replace(
-              /\{\{(.*?)\}\}/g,
-              (_, p1) => options?.[p1] ?? `{{ ${p1} }}`
-            );
-          }
-
-          return i18n.t(`${namespace}:${key}`, {
-            ...options,
-            ...additionalOptions,
-            defaultValue: value,
-          });
-        };
-      } else if (typeof value === "string") {
-        Object.defineProperty(processedTranslations, key, {
-          get: () => {
-            // TODO: same as above
-            useLanguageChange();
-
-            if (
-              !globalI18nInitialized ||
-              i18n?.language?.includes(primaryLanguage)
-            ) {
-              return value;
-            }
-
-            if (cachedValues.has(key)) {
-              return cachedValues.get(key)!;
-            }
-
-            const translatedValue = i18n.t(`${namespace}:${key}`, {
-              defaultValue: value,
-            });
-
-            cachedValues.set(key, translatedValue);
-            return translatedValue;
-          },
-        });
-      } else {
-        processedTranslations[key] = value;
-      }
-    });
-
-    return new Proxy(processedTranslations, {
-      get(target, key: string) {
-        const value = target[key];
-        if (typeof value === "function") {
-          return (...args: any[]) => value(...args);
-        }
-        return value;
-      },
-    }) as {
-      [K in keyof T]: T[K] extends (...args: any[]) => any
-        ? T[K]
-        : string &
-            ((
-              options?: Record<string, any>,
-              additionalOptions?: TOptions
-            ) => string);
-    };
+    return processTranslations(namespace, translations, "", cachedValues) as Translated<T>;
   },
 };
 
