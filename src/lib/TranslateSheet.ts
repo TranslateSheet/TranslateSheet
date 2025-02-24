@@ -9,9 +9,12 @@ type Translated<T> = {
     ? T[K] extends Function
       ? T[K]
       : Translated<T[K]>
-    : string & ((options?: Record<string, any>, additionalOptions?: TOptions) => string);
+    : string &
+        ((
+          options?: Record<string, any>,
+          additionalOptions?: TOptions
+        ) => string);
 };
-
 
 let globalI18nInitialized = false;
 i18n.on("initialized", () => {
@@ -41,7 +44,8 @@ function processTranslations(
           additionalOptions?: TOptions
         ) => {
           // Force re-render on language change in React components
-          useLanguageChange();
+          // TODO: we need to a new way to handle this
+          // useLanguageChange();
 
           // Validate interpolations
           if (options) {
@@ -49,13 +53,22 @@ function processTranslations(
           } else {
             console.warn(
               `[TranslateSheet] Missing interpolated values for key: "${namespace}:${fullKey}". Expected keys: ${
-                value.match(/\{\{(.*?)\}\}/g)?.map((k) => k.replace(/{{|}}/g, "")).join(", ") || "none"
+                value
+                  .match(/\{\{(.*?)\}\}/g)
+                  ?.map((k) => k.replace(/{{|}}/g, ""))
+                  .join(", ") || "none"
               }.`
             );
           }
 
-          if (!globalI18nInitialized || i18n?.language?.includes(primaryLanguage)) {
-            return value.replace(/\{\{(.*?)\}\}/g, (_, p1) => options?.[p1] ?? `{{ ${p1} }}`);
+          if (
+            !globalI18nInitialized ||
+            i18n?.language?.includes(primaryLanguage)
+          ) {
+            return value.replace(
+              /\{\{(.*?)\}\}/g,
+              (_, p1) => options?.[p1] ?? `{{ ${p1} }}`
+            );
           }
 
           return i18n.t(`${namespace}:${fullKey}`, {
@@ -68,9 +81,13 @@ function processTranslations(
         // Define a getter for static strings
         Object.defineProperty(processed, key, {
           get: () => {
-            useLanguageChange();
+            // TODO: we need to a new way to handle this
+            // useLanguageChange();
 
-            if (!globalI18nInitialized || i18n?.language?.includes(primaryLanguage)) {
+            if (
+              !globalI18nInitialized ||
+              i18n?.language?.includes(primaryLanguage)
+            ) {
               return value;
             }
             if (cachedValues.has(fullKey)) {
@@ -86,7 +103,12 @@ function processTranslations(
       }
     } else if (typeof value === "object" && value !== null) {
       // Recursively process nested objects
-      processed[key] = processTranslations(namespace, value, fullKey, cachedValues);
+      processed[key] = processTranslations(
+        namespace,
+        value,
+        fullKey,
+        cachedValues
+      );
     } else {
       processed[key] = value;
     }
@@ -95,7 +117,9 @@ function processTranslations(
   return new Proxy(processed, {
     get(target, key: string) {
       const value = target[key];
-      return typeof value === "function" ? (...args: any[]) => value(...args) : value;
+      return typeof value === "function"
+        ? (...args: any[]) => value(...args)
+        : value;
     },
   });
 }
@@ -113,7 +137,12 @@ const TranslateSheet = {
       languageChangeEmitter.emit();
     });
 
-    return processTranslations(namespace, translations, "", cachedValues) as Translated<T>;
+    return processTranslations(
+      namespace,
+      translations,
+      "",
+      cachedValues
+    ) as Translated<T>;
   },
 };
 
