@@ -7,4 +7,6 @@ declare const TranslateSheet: {
     create<T extends Record<string, any>>(namespace: string, translations: T): Translated<T>;
 };
 
-export { TranslateSheet as default };
+declare const useLanguageChange: () => void;
+
+export { TranslateSheet as default, useLanguageChange };

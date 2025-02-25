@@ -43,9 +43,6 @@ function processTranslations(
           options?: Record<string, any>,
           additionalOptions?: TOptions
         ) => {
-          // Force re-render on language change in React components
-          // TODO: we need to a new way to handle this
-          // useLanguageChange();
 
           // Validate interpolations
           if (options) {
@@ -81,8 +78,6 @@ function processTranslations(
         // Define a getter for static strings
         Object.defineProperty(processed, key, {
           get: () => {
-            // TODO: we need to a new way to handle this
-            // useLanguageChange();
 
             if (
               !globalI18nInitialized ||
