@@ -8,12 +8,10 @@ export const commonOptions: OptionConfig[] = [
   {
     flags: "--output <output>",
     description: "Output directory",
-    defaultValue: "./i18n",
   },
   {
     flags: "--primaryLanguage <primaryLanguage>",
     description: "Primary language",
-    defaultValue: "en",
   },
   {
     flags: "--languages <languages>",
@@ -22,13 +20,11 @@ export const commonOptions: OptionConfig[] = [
   {
     flags: "--fileExtension <fileExtension>",
     description: "File extension",
-    defaultValue: ".ts",
   },
   { flags: "--apiKey <apiKey>", description: "TranslateSheet API key" },
   {
     flags: "--config <config>",
     description: "Path to configuration file",
-    defaultValue: "./translateSheetConfig.js",
   },
   {
     flags: "--generatePrimaryLanguageFile <generatePrimaryLanguageFile>",

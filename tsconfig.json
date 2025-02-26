@@ -9,7 +9,6 @@
     "esModuleInterop": true,        // Ensure compatibility with CommonJS
     "strict": true,                 // Enable strict type checking
     "declarationMap": true,
-    "jsx": "react"
   },
   "include": ["src/index.ts", "src/lib/TranslateSheet.ts"]
 }

@@ -1,6 +1,6 @@
 {
   "name": "translate-sheet",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "description": "translations made easy",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -21,7 +21,6 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "react": ">=16.8.0",
     "i18next": ">=23.0.0"
   },
   "devDependencies": {

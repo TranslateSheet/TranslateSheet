@@ -30,7 +30,7 @@ export async function getMergedConfig(
       cliOptions.generatePrimaryLanguageFile !== undefined
         ? cliOptions.generatePrimaryLanguageFile === "true" ||
           cliOptions.generatePrimaryLanguageFile === true
-        : fileConfig.generatePrimaryLanguageFIle || false,
+        : fileConfig.generatePrimaryLanguageFile || false,
   };
 
   return merged;

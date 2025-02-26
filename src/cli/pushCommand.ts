@@ -22,7 +22,9 @@ export function createPushCommand(): Command {
       process.exit(1);
     }
 
-    for (const lang of config.languages) {
+    const totalLanguagesToUpload = Array.from(new Set([config.primaryLanguage, ...config.languages]));
+
+    for (const lang of totalLanguagesToUpload) {
       const isPrimary = lang === config.primaryLanguage;
       let content;
 
