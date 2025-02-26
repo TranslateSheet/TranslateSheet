@@ -6,6 +6,7 @@ import { uploadTranslationContent } from "../api/uploadTranslationContent";
 import { getMergedConfig } from "./getMergedConfig";
 import { addCommonOptions } from "./addCommonOptions";
 import extractTranslateSheetObjects from "../helpers/extractTranslateSheetObjects";
+import { generateTranslationTypesFile } from "../helpers/generateTranslationTypesFile";
 
 export function createGenerateCommand(): Command {
   const generateCmd = new Command("generate");
@@ -17,6 +18,14 @@ export function createGenerateCommand(): Command {
     // 3) Extract translations
     console.log("Extracting translations...");
     const primaryLanguageContent = extractTranslateSheetObjects();
+
+    if (config.fileExtension === ".ts") {
+      const filePath = generateTranslationTypesFile(
+        primaryLanguageContent,
+        config.output
+      );
+      console.log(`✅ Generated types file: ${filePath}`);
+    }
 
     try {
       // 5) Upload primary language translations

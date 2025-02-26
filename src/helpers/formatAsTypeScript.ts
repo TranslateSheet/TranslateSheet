@@ -33,7 +33,9 @@ const formatAsTypeScript = (
 
   const objectString = formatObject(content);
 
-  return `const ${sanitizedLanguage}: Record<string, any> = {\n${objectString}\n};\nexport default ${sanitizedLanguage};`;
+  return `import { Translations } from "./translations.types";
+  
+  const ${sanitizedLanguage}: Translations = {\n${objectString}\n};\nexport default ${sanitizedLanguage};`;
 };
 
 export default formatAsTypeScript;

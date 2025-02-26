@@ -33,7 +33,7 @@ const requestTranslations = async ({
     ];
     resources = [`"${primaryLanguage}": ${sanitizedPrimaryLanguage}`];
   } else {
-    resources = [`"${primaryLanguage}": "primary language"`];
+    resources = [`"${primaryLanguage}": { language: "isPrimary" }`];
   }
 
   // Safeguard against duplicate languages
