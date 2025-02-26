@@ -21,5 +21,5 @@ export interface TranslateSheetConfig {
   output: string;
 
   /** The output directory where the generated translation files will be saved */
-  generatePrimaryLanguageFile: boolean;
+  generatePrimaryLanguageFile: string | boolean;
 }
