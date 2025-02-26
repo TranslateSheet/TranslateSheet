@@ -15,17 +15,22 @@ const requestTranslations = async ({
   languages,
   fileExtension,
   apiKey,
+  generatePrimaryLanguageFile,
 }: TranslateSheetConfig & {
   primaryLanguageContent: Record<string, any>;
 }): Promise<void> => {
-  const sanitizedPrimaryLanguage = sanitizeLanguage(primaryLanguage);
+  let imports: string[] = [];
+  let resources: string[] = [];
 
-  const imports: string[] = [
-    `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`,
-  ];
-  const resources: string[] = [
-    `"${primaryLanguage}": ${sanitizedPrimaryLanguage}`,
-  ];
+  if (generatePrimaryLanguageFile) {
+    const sanitizedPrimaryLanguage = sanitizeLanguage(primaryLanguage);
+    imports = [
+      `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`,
+    ];
+    resources = [`"${primaryLanguage}": ${sanitizedPrimaryLanguage}`];
+  } else {
+    resources = [`"${primaryLanguage}": "primary language"`];
+  }
 
   // Safeguard against duplicate languages
   const uniqueLanguages = Array.from(new Set(languages));

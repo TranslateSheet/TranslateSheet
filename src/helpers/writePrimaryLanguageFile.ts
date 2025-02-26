@@ -4,14 +4,14 @@ import { TranslateSheetConfig } from "../types";
 import formatTranslatedContent from "./formatTranslatedContent";
 
 /**
- * Generate the primary language file.
+ * Write the primary language file to the users project.
  */
-const generatePrimaryLanguageFile = ({
+const writePrimaryLanguageFile = ({
   output,
   fileExtension,
   primaryLanguage,
   primaryLanguageContent,
-}: Omit<TranslateSheetConfig, "apiKey" | "languages" | "projectId"> & {
+}: Omit<TranslateSheetConfig, "apiKey" | "languages" | "projectId"| "generatePrimaryLanguageFile"> & {
   primaryLanguageContent: Record<string, any>;
 }) => {
   // 1) Use the shared format logic from `formatTranslatedContent`
@@ -30,4 +30,4 @@ const generatePrimaryLanguageFile = ({
   console.log(`Generated primary language file: ${filePath}`);
 };
 
-export default generatePrimaryLanguageFile;
+export default writePrimaryLanguageFile;

@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import loadConfig from "./loadConfig";
 import extractTranslations from "../helpers/extractTranslations";
-import generatePrimaryLanguageFile from "../helpers/generatePrimaryLanguageFile";
+import writePrimaryLanguageFile from "../helpers/writePrimaryLanguageFile";
 import requestTranslations from "../helpers/requestTranslations";
 import { TranslateSheetConfig } from "../types";
 import { uploadTranslationContent } from "../api/uploadTranslationContent";
@@ -26,6 +26,11 @@ export function createGenerateCommand(): Command {
       "Path to configuration file",
       "./translateSheetConfig.js"
     )
+    .option(
+      "--generatePrimaryLanguageFile <generatePrimaryLanguageFIle>",
+      "Generate primary language file",
+      undefined
+    )
     // TODO: available but not currently using
     .option("--projectId <projectId>", "TranslateSheet Project Id", undefined)
     .action(async (cmd) => {
@@ -33,9 +38,10 @@ export function createGenerateCommand(): Command {
         output,
         primaryLanguage,
         languages,
-        apiKey,
         fileExtension,
+        apiKey,
         config: configPath,
+        generatePrimaryLanguageFile,
       } = cmd;
 
       // 1) Load configuration from file
@@ -51,6 +57,10 @@ export function createGenerateCommand(): Command {
           [],
         fileExtension: fileExtension || config.fileExtension || ".ts",
         apiKey: apiKey || config.apiKey,
+        generatePrimaryLanguageFile:
+          generatePrimaryLanguageFile ||
+          config.generatePrimaryLanguageFIle ||
+          false,
       };
 
       const {
@@ -59,6 +69,7 @@ export function createGenerateCommand(): Command {
         languages: finalLanguages,
         fileExtension: finalExtension,
         apiKey: finalApiKey,
+        generatePrimaryLanguageFile: finalGeneratePrimaryLanguageFile,
       }: TranslateSheetConfig = mergedConfig;
 
       // 3) Extract translations
@@ -81,13 +92,15 @@ export function createGenerateCommand(): Command {
         process.exit(1);
       }
 
-      // 6) Generate the primary language file locally
-      generatePrimaryLanguageFile({
-        output: finalOutput,
-        primaryLanguageContent,
-        fileExtension: finalExtension,
-        primaryLanguage: finalPrimaryLanguage,
-      });
+      // 6) Generate the primary language file locally if option enabled
+      if (finalGeneratePrimaryLanguageFile) {
+        writePrimaryLanguageFile({
+          output: finalOutput,
+          primaryLanguageContent,
+          fileExtension: finalExtension,
+          primaryLanguage: finalPrimaryLanguage,
+        });
+      }
 
       // 7) Generate translations for target languages
       if (finalLanguages.length > 0) {
@@ -106,6 +119,7 @@ export function createGenerateCommand(): Command {
           languages: finalLanguages,
           fileExtension: finalExtension,
           apiKey: finalApiKey,
+          generatePrimaryLanguageFile: finalGeneratePrimaryLanguageFile,
         });
       }
     });
