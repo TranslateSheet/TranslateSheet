@@ -7,7 +7,7 @@ import { flattenTranslations } from "./flattenTranslation";
  * Extract translations from the codebase.
  * @returns {Record<string, any>} An object containing translations grouped by namespace.
  */
-const extractTranslations = (): Record<string, any> => {
+const extractTranslateSheetObjects = (): Record<string, any> => {
   const projectRoot = path.resolve(".");
   const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}", {
     ignore: ["node_modules/**", "dist/**", "build/**"],
@@ -60,4 +60,4 @@ const extractTranslations = (): Record<string, any> => {
   return translations;
 };
 
-export default extractTranslations;
+export default extractTranslateSheetObjects;

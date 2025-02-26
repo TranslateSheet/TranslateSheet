@@ -10,19 +10,21 @@ export function createPullCommand(): Command {
   addCommonOptions(pullCmd);
 
   pullCmd.action(async (cmd) => {
-    const mergedConfig: TranslateSheetConfig = await getMergedConfig(cmd);
+    const config: TranslateSheetConfig = await getMergedConfig(cmd);
 
     console.log("Pulling translations from server...");
 
     try {
       const translationsByLang = await pullTranslationContent({
-        apiKey: mergedConfig.apiKey,
+        apiKey: config.apiKey,
       });
 
       writeTranslationFiles({
         translationsByLang,
-        output: mergedConfig.output,
-        fileExtension: mergedConfig.fileExtension,
+        output: config.output,
+        fileExtension: config.fileExtension,
+        shouldWritePrimaryLanguageFile: config.generatePrimaryLanguageFile,
+        primaryLanguage: config.primaryLanguage,
       });
 
       console.log("✨ Pull complete!");

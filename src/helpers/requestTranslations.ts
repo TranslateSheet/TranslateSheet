@@ -22,7 +22,11 @@ const requestTranslations = async ({
   let imports: string[] = [];
   let resources: string[] = [];
 
-  if (generatePrimaryLanguageFile) {
+  const shouldWritePrimary =
+    generatePrimaryLanguageFile === true ||
+    generatePrimaryLanguageFile === "true";
+
+  if (shouldWritePrimary) {
     const sanitizedPrimaryLanguage = sanitizeLanguage(primaryLanguage);
     imports = [
       `import ${sanitizedPrimaryLanguage} from "./${primaryLanguage}";`,

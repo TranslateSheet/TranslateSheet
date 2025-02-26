@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import fs from "fs";
 import path from "path";
-import extractTranslations from "../src/helpers/extractTranslations";
+import extractTranslateSheetObjects from "../src/helpers/extractTranslateSheetObjects";
 
 function ensureDirExists(dirPath: string) {
   if (!fs.existsSync(dirPath)) {
@@ -36,7 +36,7 @@ function setupTestDirWithFiles(fileMap: Record<string, string>) {
   }
 }
 
-describe("extractTranslations", () => {
+describe("extractTranslateSheetObjects", () => {
   beforeAll(() => {
     originalCwd = process.cwd();
     // Move into our test directory to keep the glob paths consistent
@@ -66,7 +66,7 @@ describe("extractTranslations", () => {
       `,
     });
 
-    const result = extractTranslations();
+    const result = extractTranslateSheetObjects();
     expect(result).toEqual({
       common: { hello: "Hello", world: "World" },
       auth: { login: "Login", logout: "Logout" },
@@ -85,7 +85,7 @@ describe("extractTranslations", () => {
       `,
     });
 
-    const result = extractTranslations();
+    const result = extractTranslateSheetObjects();
     expect(result).toEqual({});
   });
 
@@ -121,9 +121,9 @@ describe("extractTranslations", () => {
     });
 
     try {
-      extractTranslations();
-      // If extractTranslations doesn't call process.exit, fail the test
-      expect("extractTranslations").toBe("should have exited but did not");
+      extractTranslateSheetObjects();
+      // If extractTranslateSheetObjects doesn't call process.exit, fail the test
+      expect("extractTranslateSheetObjects").toBe("should have exited but did not");
     } catch (err) {
       // We expect "process.exit called"
       expect((err as Error).message).toBe("process.exit called");
@@ -164,7 +164,7 @@ describe("extractTranslations", () => {
       `
     });
 
-    const result = extractTranslations();
+    const result = extractTranslateSheetObjects();
     expect(result).toEqual({
       dashboard: {
         title: "Dashboard Title",
@@ -195,7 +195,7 @@ describe("extractTranslations", () => {
     });
 
     // The code sets ignore patterns for node_modules, dist, build
-    const result = extractTranslations();
+    const result = extractTranslateSheetObjects();
     expect(result).toEqual({
       realNamespace: { realKey: "realValue" },
     });
@@ -218,7 +218,7 @@ describe("extractTranslations", () => {
       `,
     });
 
-    const result = extractTranslations();
+    const result = extractTranslateSheetObjects();
     expect(result).toEqual({
       nestedNamespace: {
         header: "Header",

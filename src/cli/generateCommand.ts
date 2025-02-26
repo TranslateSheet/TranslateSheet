@@ -1,28 +1,28 @@
 import { Command } from "commander";
-import extractTranslations from "../helpers/extractTranslations";
 import writePrimaryLanguageFile from "../helpers/writePrimaryLanguageFile";
 import requestTranslations from "../helpers/requestTranslations";
 import { TranslateSheetConfig } from "../types";
 import { uploadTranslationContent } from "../api/uploadTranslationContent";
 import { getMergedConfig } from "./getMergedConfig";
 import { addCommonOptions } from "./addCommonOptions";
+import extractTranslateSheetObjects from "../helpers/extractTranslateSheetObjects";
 
 export function createGenerateCommand(): Command {
   const generateCmd = new Command("generate");
   addCommonOptions(generateCmd);
 
   generateCmd.action(async (cmd) => {
-    const mergedConfig: TranslateSheetConfig = await getMergedConfig(cmd);
+    const config: TranslateSheetConfig = await getMergedConfig(cmd);
 
     // 3) Extract translations
     console.log("Extracting translations...");
-    const primaryLanguageContent = extractTranslations();
+    const primaryLanguageContent = extractTranslateSheetObjects();
 
     try {
       // 5) Upload primary language translations
       await uploadTranslationContent({
-        apiKey: mergedConfig.apiKey,
-        targetLanguage: mergedConfig.primaryLanguage,
+        apiKey: config.apiKey,
+        targetLanguage: config.primaryLanguage,
         content: primaryLanguageContent,
         isPrimary: true,
       });
@@ -35,18 +35,18 @@ export function createGenerateCommand(): Command {
     }
 
     // 6) Generate the primary language file locally if option enabled
-    if (mergedConfig.generatePrimaryLanguageFile) {
+    if (config.generatePrimaryLanguageFile) {
       writePrimaryLanguageFile({
-        output: mergedConfig.output,
+        output: config.output,
         primaryLanguageContent,
-        fileExtension: mergedConfig.fileExtension,
-        primaryLanguage: mergedConfig.primaryLanguage,
+        fileExtension: config.fileExtension,
+        primaryLanguage: config.primaryLanguage,
       });
     }
 
     // 7) Generate translations for target languages
-    if (mergedConfig.languages.length > 0) {
-      if (!mergedConfig.apiKey) {
+    if (config.languages.length > 0) {
+      if (!config.apiKey) {
         console.error(
           "API key is required. Provide it via config or CLI options."
         );
@@ -55,13 +55,13 @@ export function createGenerateCommand(): Command {
 
       console.log("Generating translations for target languages...");
       await requestTranslations({
-        output: mergedConfig.output,
+        output: config.output,
         primaryLanguageContent,
-        primaryLanguage: mergedConfig.primaryLanguage,
-        languages: mergedConfig.languages,
-        fileExtension: mergedConfig.fileExtension,
-        apiKey: mergedConfig.apiKey,
-        generatePrimaryLanguageFile: mergedConfig.generatePrimaryLanguageFile,
+        primaryLanguage: config.primaryLanguage,
+        languages: config.languages,
+        fileExtension: config.fileExtension,
+        apiKey: config.apiKey,
+        generatePrimaryLanguageFile: config.generatePrimaryLanguageFile,
       });
     }
   });
