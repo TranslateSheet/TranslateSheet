@@ -5,3 +5,5 @@ src/Test.tsx
 test/
 
 expo-example/
+
+node_modules/

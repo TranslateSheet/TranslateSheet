@@ -21,6 +21,7 @@
   },
   "sideEffects": false,
   "peerDependencies": {
+    "react": ">=16.8.0",
     "i18next": ">=23.0.0"
   },
   "devDependencies": {
