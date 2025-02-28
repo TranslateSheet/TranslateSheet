@@ -1,6 +1,6 @@
 {
   "name": "translate-sheet",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "description": "translations made easy",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

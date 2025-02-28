@@ -1,6 +1,7 @@
 import * as glob from "glob";
 import fs from "fs";
 import path from "path";
+import balanced from "balanced-match"; // Ensure this package is installed
 import { flattenTranslations } from "./flattenTranslation";
 
 /**
@@ -26,34 +27,51 @@ const extractTranslateSheetObjects = (): Record<string, any> => {
     }
 
     const content = fs.readFileSync(filePath, "utf-8");
-    const regex = /TranslateSheet\.create\("([^"]+)",\s*({[\s\S]*?})\)/g;
-    let match;
+    // Updated regex: match both single and double quotes for the namespace.
+    const regex = /TranslateSheet\.create\(\s*(['"])([^'"]+)\1\s*,/g;
+    let match: RegExpExecArray | null;
 
     while ((match = regex.exec(content)) !== null) {
-      const namespace = match[1];
-      const translationObject = eval(`(${match[2]})`);
+      const namespace = match[2];
+      // Find the starting position of the translation object.
+      const startIndex = content.indexOf("{", regex.lastIndex);
+      if (startIndex === -1) continue;
 
-      // Flatten the translation object to support nested keys
-      const flattenedTranslations = flattenTranslations(translationObject);
+      // Use balanced-match to extract the entire object literal, including nested braces.
+      const balancedResult = balanced("{", "}", content.slice(startIndex));
+      if (!balancedResult) continue;
+      const objectString = "{" + balancedResult.body + "}";
+      // Update regex.lastIndex to move past the current matched object.
+      regex.lastIndex = startIndex + balancedResult.end + 1;
 
-      if (!translations[namespace]) {
-        translations[namespace] = {};
-        seenKeysByNamespace.set(namespace, new Map());
-      }
-      const existingKeys = seenKeysByNamespace.get(namespace)!;
+      try {
+        const translationObject = eval(`(${objectString})`);
+        const flattened = flattenTranslations(translationObject);
 
-      Object.entries(flattenedTranslations).forEach(([key, value]) => {
-        if (existingKeys.has(key)) {
-          console.error(
-            `[TranslateSheet] Duplicate key detected: "${namespace}.${key}"` +
-              `\n - First found in: ${existingKeys.get(key)}` +
-              `\n - Also found in: ${relativeFilePath}`
-          );
-          process.exit(1);
+        if (!translations[namespace]) {
+          translations[namespace] = {};
+          seenKeysByNamespace.set(namespace, new Map());
         }
-        existingKeys.set(key, relativeFilePath);
-        translations[namespace][key] = value;
-      });
+        const existingKeys = seenKeysByNamespace.get(namespace)!;
+
+        Object.entries(flattened).forEach(([key, value]) => {
+          if (existingKeys.has(key)) {
+            console.error(
+              `[TranslateSheet] Duplicate key detected: "${namespace}.${key}"` +
+                `\n - First found in: ${existingKeys.get(key)}` +
+                `\n - Also found in: ${relativeFilePath}`
+            );
+            process.exit(1);
+          }
+          existingKeys.set(key, relativeFilePath);
+          translations[namespace][key] = value;
+        });
+      } catch (error) {
+        console.error(
+          `[TranslateSheet] Failed to eval translation object in ${relativeFilePath}:`,
+          error
+        );
+      }
     }
   });
 
