@@ -8,7 +8,7 @@ export const useLanguageChange = () => {
   useEffect(() => {
     return languageChangeEmitter.subscribe(() => {
       console.log("Language change detected");
-      setLangChange((prev) => prev + 1);
+      setLangChange((prev) => (prev + 1) % 3);
     });
   }, []);
 };

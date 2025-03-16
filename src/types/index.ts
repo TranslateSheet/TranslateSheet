@@ -53,6 +53,12 @@ export interface LocalizationAdapter {
    * @returns The current language code.
    */
   getLanguage: () => string;
+  /**
+   * Subscribes to language change events.
+   * @param callback - The callback function to be called when the language changes.
+   * @returns A function to unsubscribe from the language change event.
+   */
+  onLanguageChange: (callback: (language: string) => void) => void;
 }
 
 /**
@@ -64,4 +70,3 @@ export type PredefinedAdapters = "i18next" | "i18n-js";
  * Adapter type can be either a predefined adapter string or a custom implementation.
  */
 export type Adapter = PredefinedAdapters | LocalizationAdapter;
-

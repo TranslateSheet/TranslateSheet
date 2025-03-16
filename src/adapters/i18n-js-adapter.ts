@@ -11,6 +11,9 @@ const i18nJsAdapter: LocalizationAdapter = {
     i18n.locale = language; // Set the current locale
   },
   getLanguage: () => i18n.locale, // Get the current locale
+  onLanguageChange: (onLanguageChange) => {
+    i18n.onChange((language) => onLanguageChange(language.locale));
+  },
 };
 
 export default i18nJsAdapter;
