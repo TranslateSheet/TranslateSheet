@@ -1,7 +1,7 @@
 import React from "react";
 import { Trans } from "react-i18next";
 import { Link } from "expo-router";
-import TranslateSheet from "translate-sheet";
+import TranslateSheet from "@/i18n/translate-sheet";
 
 // TODO: BA - Trans component needs further testing w TranslateSheet
 

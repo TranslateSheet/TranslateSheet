@@ -7,7 +7,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import TranslateSheet from "translate-sheet";
+import TranslateSheet from "@/i18n/translate-sheet";
 
 const testFunc = (yoyo: boolean) => {
   return yoyo ? translations.yoyo : translations.nope;

@@ -1,11 +1,15 @@
 import { TOptions } from "i18next";
-import languageChangeEmitter from "./utils/languageChangeEmitter";
 import validateInterpolatedKeys from "../lib/utils/validateInterpolatedKeys";
+import languageChangeEmitter from "./utils/languageChangeEmitter";
 
 import i18nJsAdapter from "../adapters/i18n-js-adapter";
 import i18nextAdapter from "../adapters/i18next-adapter";
-import { LocalizationAdapter, PredefinedAdapters } from "../types";
-import { TranslateSheetConfig } from "../types";
+import {
+  LocalizationAdapter,
+  PredefinedAdapters,
+  TranslateSheetConfig,
+} from "../types";
+import { useLanguageChange } from "./hooks/useLanguageChange";
 
 // Recursive type transformation for nested translations
 type Translated<T> = {
@@ -18,6 +22,8 @@ type Translated<T> = {
           options?: Record<string, any>,
           additionalOptions?: TOptions
         ) => string);
+} & {
+  $useLanguageChange: typeof useLanguageChange;
 };
 
 const primaryLanguage = "en";
@@ -108,6 +114,9 @@ function processTranslations(
 
   return new Proxy(processed, {
     get(target, key: string) {
+      if (key === "$useLanguageChange") {
+        return () => useLanguageChange();
+      }
       const value = target[key];
       return typeof value === "function"
         ? (...args: any[]) => value(...args)
@@ -173,9 +182,10 @@ const TranslateSheet = {
 
     let currentLanguage = adapter.getLanguage();
 
-    adapter.onLanguageChange(() => {
-      currentLanguage = adapter!.getLanguage();
+    adapter.onLanguageChange((language) => {
+      currentLanguage = language;
       cachedValues.clear();
+      languageChangeEmitter.emit();
     });
 
     return processTranslations(

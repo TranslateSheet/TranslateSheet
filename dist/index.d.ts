@@ -59,14 +59,16 @@ type PredefinedAdapters = "i18next" | "i18n-js";
  */
 type Adapter = PredefinedAdapters | LocalizationAdapter;
 
+declare const useLanguageChange: () => void;
+
 type Translated<T> = {
     [K in keyof T]: T[K] extends object ? T[K] extends Function ? T[K] : Translated<T[K]> : string & ((options?: Record<string, any>, additionalOptions?: TOptions) => string);
+} & {
+    $useLanguageChange: typeof useLanguageChange;
 };
 declare const TranslateSheet: {
     init: (options: TranslateSheetConfig) => void;
     create<T extends Record<string, any>>(namespace: string, translations: T): Translated<T>;
 };
 
-declare const useLanguageChange: () => void;
-
-export { TranslateSheet as default, useLanguageChange };
+export { type TranslateSheetConfig, TranslateSheet as default, useLanguageChange };

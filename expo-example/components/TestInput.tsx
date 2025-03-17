@@ -1,6 +1,6 @@
 import { View, Text, Button, TextInput } from "react-native";
 import React, { useState } from "react";
-import TranslateSheet from "translate-sheet";
+import TranslateSheet from "@/i18n/translate-sheet";
 
 const TestInput = () => {
   const [testVal, setTestVal] = useState<boolean>(true);

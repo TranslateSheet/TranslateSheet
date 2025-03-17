@@ -6,10 +6,11 @@ import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import LocationToggle from "@/components/LocationToggle";
-import TranslateSheet from "translate-sheet";
+import TranslateSheet from "@/i18n/translate-sheet";
 import TestInput from "@/components/TestInput";
 
 export default function HomeScreen() {
+  translations.$useLanguageChange();
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}

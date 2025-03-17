@@ -7,7 +7,7 @@ import Animated, {
   withRepeat,
   withSequence,
 } from "react-native-reanimated";
-import TranslateSheet from "translate-sheet";
+import TranslateSheet from "@/i18n/translate-sheet";
 
 import { ThemedText } from "@/components/ThemedText";
 
