@@ -10,7 +10,7 @@ import { flattenTranslations } from "./flattenTranslation";
  */
 const extractTranslateSheetObjects = (): Record<string, any> => {
   const projectRoot = path.resolve(".");
-  const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx}", {
+  const files = glob.sync("**/*.{ts,tsx,js,jsx,mjs,cjs,json,mdx,vue}", {
     ignore: ["node_modules/**", "dist/**", "build/**"],
   });
 
