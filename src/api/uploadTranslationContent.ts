@@ -11,7 +11,7 @@ export const uploadTranslationContent = async ({
   targetLanguage: string;
   content: Record<string, any>;
   isPrimary: boolean;
-}): Promise<void> => {
+}): Promise<{ deletedKeyCount: number }> => {
   try {
     const response = await fetch(
       "https://api.translatesheet.co/translations/upload",
@@ -38,7 +38,15 @@ export const uploadTranslationContent = async ({
       throw new Error(`Backend upload failed: ${response.statusText}`);
     }
 
+    const data: any = await response.json().catch(() => ({}));
+    const deletedKeyCount: number = data?.deletedKeyCount ?? 0;
+    if (deletedKeyCount > 0) {
+      console.log(
+        `🧹 Removed ${deletedKeyCount} deleted key(s) from the backend.`
+      );
+    }
     console.log("💾 Successfully uploaded translations to backend.");
+    return { deletedKeyCount };
   } catch (err) {
     console.error(
       "❌ Error sending primary language translations to backend:",

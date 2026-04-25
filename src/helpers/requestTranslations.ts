@@ -12,6 +12,20 @@ const POLL_TIMEOUT_MS = 5 * 60_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const buildSubset = (
+  primaryLanguageContent: Record<string, Record<string, string>>,
+  keys: Array<{ namespace: string; key: string }>
+): Record<string, Record<string, string>> => {
+  const subset: Record<string, Record<string, string>> = {};
+  for (const { namespace, key } of keys) {
+    const value = primaryLanguageContent?.[namespace]?.[key];
+    if (typeof value !== "string") continue;
+    if (!subset[namespace]) subset[namespace] = {};
+    subset[namespace][key] = value;
+  }
+  return subset;
+};
+
 const countTranslated = (
   languageContent: Record<string, Record<string, string>> | undefined,
   expectedKeys: Array<{ namespace: string; key: string }>
@@ -37,7 +51,6 @@ const waitForLanguage = async ({
   const startedAt = Date.now();
   const total = expectedKeys.length;
   let lastCount = -1;
-  let stalledPolls = 0;
 
   while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
     await sleep(POLL_INTERVAL_MS);
@@ -50,15 +63,10 @@ const waitForLanguage = async ({
       return languageContent;
     }
 
-    if (count === lastCount) {
-      stalledPolls++;
-    } else {
-      stalledPolls = 0;
+    if (count !== lastCount) {
+      console.log(`⏳ ${count}/${total} keys translated for ${targetLanguage}...`);
       lastCount = count;
     }
-
-    const stalledHint = stalledPolls > 0 ? ` (no progress in ${stalledPolls * (POLL_INTERVAL_MS / 1000)}s)` : "";
-    console.log(`⏳ ${count}/${total} keys translated for ${targetLanguage}${stalledHint}...`);
   }
 
   throw new Error(
@@ -100,23 +108,47 @@ const requestTranslations = async ({
   }
 
   const expectedKeys = flattenContent(primaryLanguageContent);
+  const existingTranslations = await pullTranslationContent({
+    apiKey,
+    silent: true,
+  });
 
   const uniqueLanguages = Array.from(new Set(languages));
   for (const targetLanguage of uniqueLanguages) {
     const sanitizedLanguage = sanitizeLanguage(targetLanguage);
-    console.log(`🌍 Translating content to ${targetLanguage}...`);
     try {
-      await sendTranslationRequest({
-        content: primaryLanguageContent,
-        targetLanguage,
-        apiKey,
+      const existing = existingTranslations?.[targetLanguage];
+      const missingKeys = expectedKeys.filter(({ namespace, key }) => {
+        const value = existing?.[namespace]?.[key];
+        return typeof value !== "string" || value.length === 0;
       });
 
-      const translatedContent = await waitForLanguage({
-        apiKey,
-        targetLanguage,
-        expectedKeys,
-      });
+      let translatedContent: Record<string, Record<string, string>>;
+
+      if (missingKeys.length === 0) {
+        console.log(
+          `✅ ${targetLanguage}: all ${expectedKeys.length} keys already translated, skipping API call`
+        );
+        translatedContent = existing!;
+      } else {
+        console.log(
+          `📝 ${targetLanguage}: ${missingKeys.length} new key(s) to translate (${
+            expectedKeys.length - missingKeys.length
+          } already done)`
+        );
+        const subset = buildSubset(primaryLanguageContent, missingKeys);
+        await sendTranslationRequest({
+          content: subset,
+          targetLanguage,
+          apiKey,
+        });
+
+        translatedContent = await waitForLanguage({
+          apiKey,
+          targetLanguage,
+          expectedKeys,
+        });
+      }
 
       const formattedContent = formatTranslatedContent({
         fileExtension,
