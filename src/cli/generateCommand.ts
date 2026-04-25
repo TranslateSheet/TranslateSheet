@@ -62,7 +62,14 @@ export function createGenerateCommand(): Command {
         process.exit(1);
       }
 
-      console.log("Generating translations for target languages...");
+      const providerSuffix = config.anthropicKey
+        ? " using your Anthropic API key"
+        : config.openAiKey
+          ? " using your OpenAI API key"
+          : "";
+      console.log(
+        `Generating translations for target languages${providerSuffix}...`
+      );
       await requestTranslations({
         output: config.output,
         primaryLanguageContent,
