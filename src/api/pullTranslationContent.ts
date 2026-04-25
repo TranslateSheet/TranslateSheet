@@ -10,8 +10,10 @@
  */
 export const pullTranslationContent = async ({
   apiKey,
+  silent = false,
 }: {
   apiKey: string;
+  silent?: boolean;
 }): Promise<Record<string, any>> => {
   try {
     const response = await fetch(
@@ -44,7 +46,9 @@ export const pullTranslationContent = async ({
     }
 
     // Assuming the backend returns { success: true, data: { ... } }
-    console.log("✅ Successfully pulled translations from backend.");
+    if (!silent) {
+      console.log("✅ Successfully pulled translations from backend.");
+    }
     return resData.data; // This should be the object keyed by language
   } catch (err) {
     console.error("❌ Error pulling translations from backend:", err);

@@ -12,18 +12,17 @@ const POLL_TIMEOUT_MS = 5 * 60_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const isLanguageComplete = (
+const countTranslated = (
   languageContent: Record<string, Record<string, string>> | undefined,
   expectedKeys: Array<{ namespace: string; key: string }>
-): boolean => {
-  if (!languageContent) return false;
+): number => {
+  if (!languageContent) return 0;
+  let count = 0;
   for (const { namespace, key } of expectedKeys) {
     const ns = languageContent[namespace];
-    if (!ns || typeof ns[key] !== "string" || ns[key].length === 0) {
-      return false;
-    }
+    if (ns && typeof ns[key] === "string" && ns[key].length > 0) count++;
   }
-  return true;
+  return count;
 };
 
 const waitForLanguage = async ({
@@ -36,21 +35,36 @@ const waitForLanguage = async ({
   expectedKeys: Array<{ namespace: string; key: string }>;
 }): Promise<Record<string, Record<string, string>>> => {
   const startedAt = Date.now();
+  const total = expectedKeys.length;
+  let lastCount = -1;
+  let stalledPolls = 0;
 
   while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
     await sleep(POLL_INTERVAL_MS);
-    const all = await pullTranslationContent({ apiKey });
+    const all = await pullTranslationContent({ apiKey, silent: true });
     const languageContent = all?.[targetLanguage];
-    if (isLanguageComplete(languageContent, expectedKeys)) {
+    const count = countTranslated(languageContent, expectedKeys);
+
+    if (count === total && languageContent) {
+      console.log(`✅ ${count}/${total} keys translated for ${targetLanguage}`);
       return languageContent;
     }
-    console.log(`⏳ Waiting for ${targetLanguage} translations to complete...`);
+
+    if (count === lastCount) {
+      stalledPolls++;
+    } else {
+      stalledPolls = 0;
+      lastCount = count;
+    }
+
+    const stalledHint = stalledPolls > 0 ? ` (no progress in ${stalledPolls * (POLL_INTERVAL_MS / 1000)}s)` : "";
+    console.log(`⏳ ${count}/${total} keys translated for ${targetLanguage}${stalledHint}...`);
   }
 
   throw new Error(
     `Timed out waiting for ${targetLanguage} translations after ${
       POLL_TIMEOUT_MS / 1000
-    }s. Run \`translate-sheet pull\` once the backend finishes to retrieve them.`
+    }s (last seen ${lastCount}/${total}). Run \`translate-sheet pull\` once the backend finishes, or check backend logs for errors.`
   );
 };
 
