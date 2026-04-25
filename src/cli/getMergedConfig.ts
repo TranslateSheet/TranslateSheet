@@ -1,5 +1,5 @@
 import { TranslateSheetConfig } from "../types";
-import loadConfig from "./loadConfig";
+import loadConfig, { findConfigFile } from "./loadConfig";
 
 export async function getMergedConfig(
   cliOptions: Partial<TranslateSheetConfig> & {
@@ -8,7 +8,8 @@ export async function getMergedConfig(
     generatePrimaryLanguageFile?: string | boolean;
   }
 ): Promise<TranslateSheetConfig> {
-  const configPath = cliOptions.config || "./translateSheetConfig.js";
+  const configPath =
+    cliOptions.config || findConfigFile() || "./translateSheetConfig.js";
   const fileConfig = await loadConfig(configPath);
 
   // Convert comma-separated languages (if provided) to an array

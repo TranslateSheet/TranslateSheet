@@ -1,40 +1,57 @@
 import { existsSync } from "fs";
 import path from "path";
 import { pathToFileURL } from "url";
+import * as glob from "glob";
+
+const CONFIG_GLOB = "**/translateSheetConfig.{js,cjs,mjs,ts}";
+const IGNORE = ["node_modules/**", "dist/**", "build/**", ".git/**"];
+
+/**
+ * Search the project tree for a translateSheetConfig file. Returns the first
+ * match, warning if multiple are found.
+ */
+export const findConfigFile = (): string | undefined => {
+  const matches = glob.sync(CONFIG_GLOB, { ignore: IGNORE });
+  if (matches.length === 0) return undefined;
+  if (matches.length > 1) {
+    console.warn(
+      `⚠️  Multiple translateSheetConfig files found, using "${matches[0]}":`
+    );
+    matches.forEach((m) => console.warn(`   - ${m}`));
+  }
+  return matches[0];
+};
 
 /**
  * Load TranslateSheet configuration from a file.
  *
- * If the config file has a ".cjs" extension, it will be loaded using require().
- * Otherwise (for .js, .mjs, etc.), it is treated as an ES module and loaded via dynamic import.
- *
- * ⚠️ Note on module formats:
- * When your package.json has "type": "module", even files ending in .js
- * are treated as ES modules, and require() is not supported.
- * To work around this, either rename your config file to end with .cjs,
- * or use this dynamic import approach.
- *
- * @param configPath - The relative or absolute path to the config file.
- * @returns The loaded configuration object, or an empty object if not found.
+ * - .cjs: loaded via require()
+ * - .ts: loaded via jiti (transpiles on the fly so it works in plain Node)
+ * - .js / .mjs: loaded via native dynamic import
  */
 const loadConfig = async (configPath = "./translateSheetConfig.js") => {
-  if (existsSync(configPath)) {
-    try {
-      const resolvedPath = path.resolve(configPath);
-      // If the file is CommonJS (.cjs), use require().
-      if (resolvedPath.endsWith(".cjs")) {
-        return require(resolvedPath);
-      } else {
-        // Otherwise, use dynamic import.
-        const imported = await import(pathToFileURL(resolvedPath).href);
-        return imported.default || imported;
-      }
-    } catch (error) {
-      console.error(`Failed to load config file at ${configPath}:`, error);
-      process.exit(1);
+  if (!existsSync(configPath)) return {};
+
+  try {
+    const resolvedPath = path.resolve(configPath);
+
+    if (resolvedPath.endsWith(".cjs")) {
+      return require(resolvedPath);
     }
+
+    if (resolvedPath.endsWith(".ts")) {
+      const { createJiti } = await import("jiti");
+      const jiti = createJiti(process.cwd() + "/", { interopDefault: true });
+      const imported: any = await jiti.import(resolvedPath);
+      return imported?.default || imported;
+    }
+
+    const imported = await import(pathToFileURL(resolvedPath).href);
+    return imported.default || imported;
+  } catch (error) {
+    console.error(`Failed to load config file at ${configPath}:`, error);
+    process.exit(1);
   }
-  return {};
 };
 
 export default loadConfig;

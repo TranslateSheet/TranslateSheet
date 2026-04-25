@@ -37,7 +37,8 @@
   "dependencies": {
     "balanced-match": "^4.0.4",
     "commander": "^12.1.0",
-    "glob": "^11.0.0"
+    "glob": "^11.0.0",
+    "jiti": "^2.4.2"
   },
   "bin": {
     "translate-sheet": "./dist/cli/index.js"
