@@ -86,6 +86,8 @@ const requestTranslations = async ({
   languages,
   fileExtension,
   apiKey,
+  openAiKey,
+  anthropicKey,
   generatePrimaryLanguageFile,
 }: TranslateSheetConfig & {
   primaryLanguageContent: Record<string, any>;
@@ -141,6 +143,8 @@ const requestTranslations = async ({
           content: subset,
           targetLanguage,
           apiKey,
+          openAiKey,
+          anthropicKey,
         });
 
         translatedContent = await waitForLanguage({

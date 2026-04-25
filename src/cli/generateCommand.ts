@@ -70,6 +70,8 @@ export function createGenerateCommand(): Command {
         languages: config.languages,
         fileExtension: config.fileExtension,
         apiKey: config.apiKey,
+        openAiKey: config.openAiKey,
+        anthropicKey: config.anthropicKey,
         generatePrimaryLanguageFile: config.generatePrimaryLanguageFile,
       });
     }

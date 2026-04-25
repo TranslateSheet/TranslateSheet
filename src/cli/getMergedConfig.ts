@@ -32,6 +32,8 @@ export async function getMergedConfig(
         ? cliOptions.generatePrimaryLanguageFile === "true" ||
           cliOptions.generatePrimaryLanguageFile === true
         : fileConfig.generatePrimaryLanguageFile || false,
+    openAiKey: cliOptions.openAiKey || fileConfig.openAiKey,
+    anthropicKey: cliOptions.anthropicKey || fileConfig.anthropicKey,
   };
 
   return merged;

@@ -9,10 +9,14 @@ const sendTranslationRequest = async ({
   content,
   targetLanguage,
   apiKey,
+  openAiKey,
+  anthropicKey,
 }: {
   content: Record<string, any>;
   targetLanguage: string;
   apiKey: string;
+  openAiKey?: string;
+  anthropicKey?: string;
 }): Promise<void> => {
   try {
     console.log("Sending translation request...");
@@ -28,6 +32,8 @@ const sendTranslationRequest = async ({
           content,
           targetLanguage,
           apiKey,
+          openAiKey,
+          anthropicKey,
         }),
       }
     );

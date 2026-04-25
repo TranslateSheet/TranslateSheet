@@ -25,6 +25,17 @@ interface TranslateSheetConfig {
     output: string;
     /** The output directory where the generated translation files will be saved */
     generatePrimaryLanguageFile: string | boolean;
+    /**
+     * Optional user-supplied OpenAI API key. When set, the backend uses this key
+     * for the LLM call instead of the TranslateSheet-managed key. Not stored.
+     */
+    openAiKey?: string;
+    /**
+     * Optional user-supplied Anthropic API key. When set, the backend translates
+     * via Claude using this key instead of OpenAI. Takes precedence over openAiKey.
+     * Not stored.
+     */
+    anthropicKey?: string;
 }
 
 export { type FileExtensions, type TranslateSheetConfig, TranslateSheet as default, useLanguageChange };
