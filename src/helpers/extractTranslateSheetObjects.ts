@@ -1,7 +1,7 @@
 import * as glob from "glob";
 import fs from "fs";
 import path from "path";
-import balanced from "balanced-match"; // Ensure this package is installed
+import { balanced } from "balanced-match";
 import { flattenTranslations } from "./flattenTranslation";
 
 /**

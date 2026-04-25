@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 /**
  * Send language content to the backend for storage and upsert.
  */

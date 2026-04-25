@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 /**
  * Pull all translations from the backend for a given project.
  * Returns an object keyed by language.

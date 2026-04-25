@@ -5,6 +5,7 @@
     "": {
       "name": "translate-sheet",
       "dependencies": {
+        "balanced-match": "^4.0.4",
         "commander": "^12.1.0",
         "glob": "^11.0.0",
       },
