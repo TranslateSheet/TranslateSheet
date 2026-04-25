@@ -1,5 +1,9 @@
 /**
- * Send translation request to TranslateSheet API
+ * Send translation request to TranslateSheet API.
+ *
+ * The backend runs the OpenAI translation + Supabase persistence in the
+ * background and responds 202 immediately. Callers should poll
+ * pullTranslationContent until the target language is populated.
  */
 const sendTranslationRequest = async ({
   content,
@@ -9,7 +13,7 @@ const sendTranslationRequest = async ({
   content: Record<string, any>;
   targetLanguage: string;
   apiKey: string;
-}): Promise<Record<string, any>> => {
+}): Promise<void> => {
   try {
     console.log("Sending translation request...");
 
@@ -29,13 +33,10 @@ const sendTranslationRequest = async ({
     );
 
     if (!response.ok) {
-      const errorResponse = await response.json();
+      const errorResponse = await response.json().catch(() => null);
       console.log(response.status);
       if (response.status === 403) {
-        // throw new Error(
-        //   "API key is invalid or disabled. Please check your API key."
-        // );
-        throw new Error(errorResponse.error);
+        throw new Error(errorResponse?.error || "Forbidden");
       }
       if (response.status === 401) {
         throw new Error(
@@ -53,10 +54,6 @@ const sendTranslationRequest = async ({
         }`
       );
     }
-
-    const data = await response.json();
-
-    return data.translatedContent;
   } catch (error) {
     console.error("Error translating content via API:", error);
     throw error;
