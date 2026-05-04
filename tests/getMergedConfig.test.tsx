@@ -86,7 +86,9 @@ describe("getMergedConfig", () => {
   });
 
   it("should use file config when CLI options are not provided", async () => {
-    const testConfigPath = "test-config.js";
+    // Use a unique filename — Node's ESM cache keys by URL, so reusing
+    // "test-config.js" across tests would return the previous test's module.
+    const testConfigPath = "file-only-config.js";
     setupTestConfig({
       [testConfigPath]: `
         module.exports = {

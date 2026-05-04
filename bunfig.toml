@@ -1,0 +1,19 @@
+[test]
+preload = ["./tests/setup.ts"]
+coverageReporter = ["text", "lcov"]
+coverageThreshold = 0.8
+coveragePathIgnorePatterns = [
+  "tests/**",
+  "dist/**",
+  "node_modules/**",
+  # Temp dirs created by fs-touching tests; their dynamically-loaded config
+  # files would otherwise pollute the coverage report.
+  "test-temp-*/**",
+  "test-temp-dir/**",
+  "test-output-types/**",
+  "src/cli/index.ts",
+  "src/cli/addCommonOptions.ts",
+  "src/cli/commonOptions.ts",
+  "src/index.ts",
+  "src/types/**",
+]

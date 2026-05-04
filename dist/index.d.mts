@@ -1,10 +1,19 @@
 import { TOptions } from 'i18next';
 
+type Trim<S extends string> = S extends ` ${infer R}` ? Trim<R> : S extends `${infer R} ` ? Trim<R> : S;
+type InterpolationKeyName<Raw extends string> = Raw extends `${infer Before},${string}` ? Trim<Before> : Trim<Raw>;
+type ExtractInterpolationKeys<S extends string> = S extends `${string}{{${infer Key}}}${infer Rest}` ? InterpolationKeyName<Key> | ExtractInterpolationKeys<Rest> : never;
+type InterpolationOptions<S extends string> = {
+    [K in ExtractInterpolationKeys<S>]: string | number;
+};
+type TranslationLeaf<S extends string> = [
+    ExtractInterpolationKeys<S>
+] extends [never] ? string : (options: InterpolationOptions<S>, additionalOptions?: TOptions) => string;
 type Translated<T> = {
-    [K in keyof T]: T[K] extends object ? T[K] extends Function ? T[K] : Translated<T[K]> : string & ((options?: Record<string, any>, additionalOptions?: TOptions) => string);
+    [K in keyof T]: T[K] extends string ? TranslationLeaf<T[K]> : T[K] extends object ? Translated<T[K]> : T[K];
 };
 declare const TranslateSheet: {
-    create<T extends Record<string, any>>(namespace: string, translations: T): Translated<T>;
+    create<const T extends Record<string, any>>(namespace: string, translations: T): Translated<T>;
 };
 
 declare const useLanguageChange: () => void;

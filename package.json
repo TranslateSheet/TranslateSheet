@@ -8,6 +8,9 @@
   "scripts": {
     "build": "tsup src/index.ts src/cli/index.ts --format cjs,esm --dts --out-dir dist --no-splitting --minify --no-sourcemap --target node18",
     "watch": "tsup src/index.ts src/cli/index.ts --format cjs,esm --dts --out-dir dist --no-splitting --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "prepublish": "npm version patch -m \"chore(release): %s\" && npm run build"
   },
   "exports": {
@@ -25,17 +28,22 @@
     "i18next": ">=23.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
+    "@happy-dom/global-registrator": "^20.9.0",
+    "@types/babel__traverse": "^7.28.0",
     "@types/bun": "latest",
+    "@types/node": "^22.10.1",
     "@types/react": "^19.0.6",
+    "happy-dom": "^20.9.0",
     "react": "^18.0.0",
+    "react-dom": "^18",
     "react-i18next": "^15.4.0",
     "ts-node": "^10.9.2",
-    "@types/node": "^22.10.1",
-    "tsup": "^8.3.6"
+    "tsup": "^8.3.6",
+    "typescript": "^5.0.0"
   },
   "dependencies": {
-    "balanced-match": "^4.0.4",
+    "@babel/parser": "^7.29.3",
+    "@babel/traverse": "^7.29.0",
     "commander": "^12.1.0",
     "glob": "^11.0.0",
     "jiti": "^2.4.2"

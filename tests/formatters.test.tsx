@@ -70,8 +70,10 @@ describe("formatAsTypeScript", () => {
     const language = "pt-BR"; // includes a dash
     const ts = formatAsTypeScript(testContent, language);
 
+    // Imports the generated Translations type
+    expect(ts).toContain('import { Translations } from "./translations.types";');
     // The variable name in the generated code must have the dash replaced by underscore
-    expect(ts).toContain("const pt_BR: Record<string, any> = {");
+    expect(ts).toContain("const pt_BR: Translations = {");
     // We expect a trailing comma after each property
     expect(ts).toContain('greeting: "Hello",');
     expect(ts).toContain('"some-key": "Has a dash in its key",');
@@ -79,13 +81,12 @@ describe("formatAsTypeScript", () => {
     expect(ts).toContain('subKey: "Some nested value",');
     // Check the final export
     expect(ts).toMatch(/export default pt_BR;/);
-    // Optional: if you want to confirm the typed declaration is included
-    expect(ts).toContain(": Record<string, any> = {");
   });
 
   it("should handle a language with no dash, e.g. 'en'", () => {
     const ts = formatAsTypeScript({ foo: "bar" }, "en");
-    expect(ts).toContain("const en: Record<string, any> = {");
+    expect(ts).toContain('import { Translations } from "./translations.types";');
+    expect(ts).toContain("const en: Translations = {");
     expect(ts).toContain('foo: "bar",');
     expect(ts).toMatch(/export default en;/);
   });

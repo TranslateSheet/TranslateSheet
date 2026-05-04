@@ -138,17 +138,11 @@ describe("extractTranslateSheetObjects", () => {
     expect(exitCode).toBe(1);
   });
 
-  it("should parse TS/JS/MDX/JSON files but only pick up valid TranslateSheet calls", () => {
+  it("should parse TS/JS/JSX/TSX files but only pick up valid TranslateSheet calls", () => {
     setupTestDirWithFiles({
       "someFile.tsx": `
         TranslateSheet.create("dashboard", {
           title: "Dashboard Title"
-        });
-      `,
-      "someFile.mdx": `
-        // In MDX we might have embedded code, as long as it matches the regex
-        TranslateSheet.create("marketing", {
-          slogan: "Buy Our Stuff"
         });
       `,
       "random.json": `
@@ -170,10 +164,151 @@ describe("extractTranslateSheetObjects", () => {
         title: "Dashboard Title",
         subTitle: "Subtitle from JSX",
       },
-      marketing: {
-        slogan: "Buy Our Stuff",
+    });
+  });
+
+  it("should parse TS-specific syntax (as const, satisfies, parens) without choking", () => {
+    setupTestDirWithFiles({
+      "tsAsConst.ts": `
+        type T = Record<string, string>;
+        TranslateSheet.create("asConstNs", ({
+          hello: "Hello",
+          world: "World",
+        } as const));
+      `,
+      "tsSatisfies.ts": `
+        type T = Record<string, string>;
+        TranslateSheet.create("satisfiesNs", {
+          hi: "Hi",
+        } satisfies T);
+      `,
+      "tsxFile.tsx": `
+        const _Component = () => null;
+        TranslateSheet.create("tsxNs", {
+          label: "Click me",
+          /* a block comment */
+          nested: {
+            "kebab-case-key": "with dash",
+          },
+        });
+      `,
+    });
+
+    const result = extractTranslateSheetObjects();
+    expect(result).toEqual({
+      asConstNs: { hello: "Hello", world: "World" },
+      satisfiesNs: { hi: "Hi" },
+      tsxNs: {
+        label: "Click me",
+        "nested.kebab-case-key": "with dash",
       },
     });
+  });
+
+  it("should fail loudly when a translation value is not a string literal", () => {
+    const originalError = console.error;
+    const originalExit = process.exit;
+    let capturedErrorMessage = "";
+    let exitCode: number | undefined;
+
+    console.error = (message: any) => {
+      capturedErrorMessage = String(message);
+    };
+    process.exit = ((code?: number) => {
+      exitCode = code;
+      throw new Error("process.exit called");
+    }) as typeof process.exit;
+
+    setupTestDirWithFiles({
+      "nonLiteral.ts": `
+        const greeting = "Hello";
+        TranslateSheet.create("ns", {
+          greeting,
+        });
+      `,
+    });
+
+    try {
+      extractTranslateSheetObjects();
+      expect("did not exit").toBe("should have exited");
+    } catch (err) {
+      expect((err as Error).message).toBe("process.exit called");
+    } finally {
+      console.error = originalError;
+      process.exit = originalExit;
+    }
+
+    expect(capturedErrorMessage).toContain("Translation values must be string literals");
+    expect(capturedErrorMessage).toContain("nonLiteral.ts:");
+    expect(exitCode).toBe(1);
+  });
+
+  it("should fail loudly when an object uses spread", () => {
+    const originalError = console.error;
+    const originalExit = process.exit;
+    let capturedErrorMessage = "";
+
+    console.error = (message: any) => {
+      capturedErrorMessage = String(message);
+    };
+    process.exit = ((_code?: number) => {
+      throw new Error("process.exit called");
+    }) as typeof process.exit;
+
+    setupTestDirWithFiles({
+      "spread.ts": `
+        const base = { foo: "bar" };
+        TranslateSheet.create("ns", {
+          ...base,
+          hello: "Hello",
+        });
+      `,
+    });
+
+    try {
+      extractTranslateSheetObjects();
+      expect("did not exit").toBe("should have exited");
+    } catch (err) {
+      expect((err as Error).message).toBe("process.exit called");
+    } finally {
+      console.error = originalError;
+      process.exit = originalExit;
+    }
+
+    expect(capturedErrorMessage).toContain("Spread (...) is not supported");
+    expect(capturedErrorMessage).toContain("spread.ts:");
+  });
+
+  it("should fail loudly when the namespace is not a string literal", () => {
+    const originalError = console.error;
+    const originalExit = process.exit;
+    let capturedErrorMessage = "";
+
+    console.error = (message: any) => {
+      capturedErrorMessage = String(message);
+    };
+    process.exit = ((_code?: number) => {
+      throw new Error("process.exit called");
+    }) as typeof process.exit;
+
+    setupTestDirWithFiles({
+      "dynNs.ts": `
+        const NS = "common";
+        TranslateSheet.create(NS, { hi: "Hi" });
+      `,
+    });
+
+    try {
+      extractTranslateSheetObjects();
+      expect("did not exit").toBe("should have exited");
+    } catch (err) {
+      expect((err as Error).message).toBe("process.exit called");
+    } finally {
+      console.error = originalError;
+      process.exit = originalExit;
+    }
+
+    expect(capturedErrorMessage).toContain("namespace must be a string literal");
   });
 
   it("should skip directories and ignore node_modules/dist/build (no error or data)", () => {
