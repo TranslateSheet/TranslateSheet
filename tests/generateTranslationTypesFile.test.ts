@@ -116,4 +116,26 @@ describe("generateTranslationsTypesFile", () => {
     expect(fileContent).not.toContain('"step1.title"');
     expect(fileContent).not.toContain('"step1.editText"');
   });
+
+  it("should keep dotted namespace keys flat (quoted) instead of nesting them", () => {
+    const sampleContent = {
+      "upsell.utils": {
+        refundable: "Refundable",
+        "step1.title": "Nested inner key",
+      },
+      plain: {
+        hello: "Hello",
+      },
+    };
+
+    const filePath = generateTranslationTypesFile(sampleContent, TEST_OUTPUT_DIR);
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+
+    // The namespace itself stays flat and quoted, matching the language files.
+    expect(fileContent).toContain('"upsell.utils": {');
+    expect(fileContent).not.toContain("upsell: {");
+    // Inner dotted keys still unflatten.
+    expect(fileContent).toContain("step1: {");
+    expect(fileContent).not.toContain('"step1.title"');
+  });
 });

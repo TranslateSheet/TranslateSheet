@@ -10,6 +10,9 @@ import formatAsTypeScript from "../src/helpers/formatAsTypeScript";
 const testContent = {
   greeting: "Hello",
   "some-key": "Has a dash in its key",
+  "dotted.namespace": {
+    label: "Namespace key with a dot",
+  },
   nested: {
     subKey: "Some nested value",
   },
@@ -33,11 +36,9 @@ describe("formatAsJSON", () => {
     expect(json).toContain('  "some-key"');
     expect(json).toContain('    "subKey"');
 
-    // Ensure it doesn't contain trailing commas after the last property (which JSON.stringify won't do)
-    // Just a quick naive check:
-    const lines = json.split("\n").map((l) => l.trim());
-    expect(lines.some((l) => l.endsWith(",") && l.includes("}"))).toBe(false);
-    expect(lines.some((l) => l.endsWith(",") && l.includes("]"))).toBe(false);
+    // Ensure it doesn't contain trailing commas before a closing brace/bracket
+    // (which JSON.stringify won't do) — the JSON.parse above also guarantees this
+    expect(json).not.toMatch(/,\s*[}\]]/);
   });
 });
 
@@ -51,6 +52,8 @@ describe("formatAsJavaScript", () => {
     // We expect a trailing comma after each property in the object
     expect(js).toContain('greeting: "Hello",');
     expect(js).toContain('"some-key": "Has a dash in its key",');
+    // Keys with dots must be quoted too, or the output won't parse
+    expect(js).toContain('"dotted.namespace": {');
     // Nested object should also have trailing commas in each property
     expect(js).toContain('subKey: "Some nested value",');
     // Should end with an export
@@ -77,6 +80,8 @@ describe("formatAsTypeScript", () => {
     // We expect a trailing comma after each property
     expect(ts).toContain('greeting: "Hello",');
     expect(ts).toContain('"some-key": "Has a dash in its key",');
+    // Keys with dots must be quoted too, or the output won't compile
+    expect(ts).toContain('"dotted.namespace": {');
     // Nested object and array checks
     expect(ts).toContain('subKey: "Some nested value",');
     // Check the final export

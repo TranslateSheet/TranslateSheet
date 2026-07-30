@@ -17,8 +17,10 @@ const formatAsJavaScript = (
   ): string => {
     return Object.entries(obj)
       .map(([key, value]) => {
-        // Quote keys only if they contain a dash ("-")
-        const formattedKey = key.includes("-") ? `"${key}"` : key;
+        // Quote keys that aren't valid identifiers (e.g. contain "-" or ".")
+        const formattedKey = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key)
+          ? key
+          : JSON.stringify(key);
 
         // Recursively format nested objects
         const formattedValue =
